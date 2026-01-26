@@ -6,9 +6,10 @@ const Clientes = () => {
   const [filtro, setFiltro] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('todos')
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [clienteEditando, setClienteEditando] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const [nuevoCliente, setNuevoCliente] = useState({
+  const [formData, setFormData] = useState({
     nombre: '',
     email: '',
     telefono: '',
@@ -28,72 +29,108 @@ const Clientes = () => {
   }, [])
 
   const cargarClientes = async () => {
-    try {
-      setLoading(true)
-      const token = localStorage.getItem('adbmx_token')
-      const response = await fetch(`http://localhost:5000/api/clientes?search=${filtro}&estado=${estadoFiltro}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setClientes(data)
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const agregarCliente = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('adbmx_token')
-      const response = await fetch('http://localhost:5000/api/clientes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+    setLoading(true)
+    // Simulación de datos
+    setTimeout(() => {
+      setClientes([
+        {
+          id: 1,
+          nombre: 'María González',
+          email: 'maria@techcorp.com',
+          telefono: '+34 612 345 678',
+          empresa: 'TechCorp SA',
+          industria: 'Tecnología',
+          estado: 'cliente',
+          valorPotencial: 50000,
+          fuente: 'Referencia',
+          fechaCreacion: new Date('2024-01-15')
         },
-        body: JSON.stringify(nuevoCliente)
-      })
-      
-      if (response.ok) {
-        setNuevoCliente({
-          nombre: '', email: '', telefono: '', empresa: '', industria: '', 
-          direccion: '', estado: 'prospecto', valorPotencial: '', fuente: '', notas: ''
-        })
-        setMostrarForm(false)
-        cargarClientes()
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    }
+        {
+          id: 2,
+          nombre: 'Carlos Rodríguez',
+          email: 'carlos@innovate.com',
+          telefono: '+34 623 456 789',
+          empresa: 'Innovate Labs',
+          industria: 'Consultoría',
+          estado: 'prospecto',
+          valorPotencial: 75000,
+          fuente: 'Web',
+          fechaCreacion: new Date('2024-02-20')
+        }
+      ])
+      setLoading(false)
+    }, 1000)
   }
 
-  const eliminarCliente = async (id) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (clienteEditando) {
+      // Editar cliente
+      setClientes(prev => prev.map(cliente => 
+        cliente.id === clienteEditando.id 
+          ? { ...cliente, ...formData }
+          : cliente
+      ))
+    } else {
+      // Nuevo cliente
+      const nuevoCliente = {
+        id: Date.now(),
+        ...formData,
+        fechaCreacion: new Date(),
+        creadoPor: user?.nombre
+      }
+      setClientes(prev => [nuevoCliente, ...prev])
+    }
+    limpiarForm()
+  }
+
+  const editarCliente = (cliente) => {
+    setClienteEditando(cliente)
+    setFormData({
+      nombre: cliente.nombre,
+      email: cliente.email,
+      telefono: cliente.telefono,
+      empresa: cliente.empresa,
+      industria: cliente.industria,
+      direccion: cliente.direccion || '',
+      estado: cliente.estado,
+      valorPotencial: cliente.valorPotencial || '',
+      fuente: cliente.fuente || '',
+      notas: cliente.notas || ''
+    })
+    setMostrarForm(true)
+  }
+
+  const eliminarCliente = (id) => {
     if (window.confirm('¿Estás seguro de eliminar este cliente?')) {
-      try {
-        const token = localStorage.getItem('adbmx_token')
-        await fetch(`http://localhost:5000/api/clientes/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        cargarClientes()
-      } catch (error) {
-        console.error('Error:', error)
-      }
+      setClientes(prev => prev.filter(cliente => cliente.id !== id))
     }
   }
 
-  useEffect(() => {
-    cargarClientes()
-  }, [filtro, estadoFiltro])
+  const limpiarForm = () => {
+    setFormData({
+      nombre: '',
+      email: '',
+      telefono: '',
+      empresa: '',
+      industria: '',
+      direccion: '',
+      estado: 'prospecto',
+      valorPotencial: '',
+      fuente: '',
+      notas: ''
+    })
+    setClienteEditando(null)
+    setMostrarForm(false)
+  }
+
+  const clientesFiltrados = clientes.filter(cliente => {
+    const coincideBusqueda = cliente.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+                            cliente.email.toLowerCase().includes(filtro.toLowerCase()) ||
+                            cliente.empresa.toLowerCase().includes(filtro.toLowerCase())
+    const coincideEstado = estadoFiltro === 'todos' || cliente.estado === estadoFiltro
+    return coincideBusqueda && coincideEstado
+  })
 
   const getEstadoColor = (estado) => {
     const colores = {
@@ -105,34 +142,47 @@ const Clientes = () => {
     return colores[estado] || 'bg-gray-100 text-gray-800'
   }
 
+  const getEstadoTexto = (estado) => {
+    const textos = {
+      prospecto: 'Prospecto',
+      cliente: 'Cliente Activo',
+      inactivo: 'Inactivo',
+      perdido: 'Perdido'
+    }
+    return textos[estado] || estado
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">👥 Gestión de Clientes</h1>
-          <p className="text-gray-600">Administra tu cartera de clientes y prospectos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clientes</h1>
+          <p className="text-gray-600 text-sm sm:text-base mt-1">Gestiona tu cartera de clientes</p>
         </div>
         <button 
-          className="btn-primary"
           onClick={() => setMostrarForm(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 w-full sm:w-auto text-sm sm:text-base"
         >
-          + Nuevo Cliente
+          Agregar Cliente
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="flex gap-4">
-        <input
-          type="text"
-          placeholder="Buscar clientes por nombre, empresa o email..."
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="form-input flex-1"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="sm:col-span-2">
+          <input
+            type="text"
+            placeholder="Buscar clientes por nombre, email o empresa..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          />
+        </div>
         <select 
           value={estadoFiltro} 
           onChange={(e) => setEstadoFiltro(e.target.value)}
-          className="form-input w-48"
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
         >
           <option value="todos">Todos los estados</option>
           <option value="prospecto">Prospecto</option>
@@ -140,17 +190,22 @@ const Clientes = () => {
           <option value="inactivo">Inactivo</option>
           <option value="perdido">Perdido</option>
         </select>
+        <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border text-center">
+          Total: {clientesFiltrados.length}
+        </div>
       </div>
 
-      {/* Modal de formulario */}
+      {/* Modal Form */}
       {mostrarForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-900">Nuevo Cliente</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {clienteEditando ? 'Editar Cliente' : 'Nuevo Cliente'}
+                </h2>
                 <button 
-                  onClick={() => setMostrarForm(false)}
+                  onClick={limpiarForm}
                   className="text-gray-500 hover:text-gray-700 text-2xl"
                 >
                   ×
@@ -158,86 +213,129 @@ const Clientes = () => {
               </div>
             </div>
             
-            <form onSubmit={agregarCliente} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Nombre completo *"
-                  value={nuevoCliente.nombre}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, nombre: e.target.value})}
-                  className="form-input"
-                  required
-                />
-                <input
-                  type="email"
-                  placeholder="Email *"
-                  value={nuevoCliente.email}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, email: e.target.value})}
-                  className="form-input"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Teléfono"
-                  value={nuevoCliente.telefono}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, telefono: e.target.value})}
-                  className="form-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Empresa"
-                  value={nuevoCliente.empresa}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, empresa: e.target.value})}
-                  className="form-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Industria"
-                  value={nuevoCliente.industria}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, industria: e.target.value})}
-                  className="form-input"
-                />
-                <select
-                  value={nuevoCliente.estado}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, estado: e.target.value})}
-                  className="form-input"
-                >
-                  <option value="prospecto">Prospecto</option>
-                  <option value="cliente">Cliente Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                  <option value="perdido">Perdido</option>
-                </select>
-                <input
-                  type="number"
-                  placeholder="Valor Potencial"
-                  value={nuevoCliente.valorPotencial}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, valorPotencial: e.target.value})}
-                  className="form-input"
-                  step="0.01"
-                />
-                <input
-                  type="text"
-                  placeholder="Fuente"
-                  value={nuevoCliente.fuente}
-                  onChange={(e) => setNuevoCliente({...nuevoCliente, fuente: e.target.value})}
-                  className="form-input"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
+                  <input
+                    type="text"
+                    value={formData.empresa}
+                    onChange={(e) => setFormData({...formData, empresa: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Industria</label>
+                  <input
+                    type="text"
+                    value={formData.industria}
+                    onChange={(e) => setFormData({...formData, industria: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                  <select
+                    value={formData.estado}
+                    onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="prospecto">Prospecto</option>
+                    <option value="cliente">Cliente Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="perdido">Perdido</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor Potencial</label>
+                  <input
+                    type="number"
+                    value={formData.valorPotencial}
+                    onChange={(e) => setFormData({...formData, valorPotencial: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fuente</label>
+                  <select
+                    value={formData.fuente}
+                    onChange={(e) => setFormData({...formData, fuente: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="">Seleccionar fuente</option>
+                    <option value="web">Sitio Web</option>
+                    <option value="referencia">Referencia</option>
+                    <option value="redes">Redes Sociales</option>
+                    <option value="evento">Evento</option>
+                    <option value="publicidad">Publicidad</option>
+                  </select>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                  <input
+                    type="text"
+                    value={formData.direccion}
+                    onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                  <textarea
+                    rows="3"
+                    value={formData.notas}
+                    onChange={(e) => setFormData({...formData, notas: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
               </div>
-              <textarea
-                placeholder="Notas adicionales..."
-                value={nuevoCliente.notas}
-                onChange={(e) => setNuevoCliente({...nuevoCliente, notas: e.target.value})}
-                rows="4"
-                className="form-input"
-              />
+              
               <div className="flex gap-3 pt-4">
-                <button type="submit" className="btn-primary flex-1">
-                  Crear Cliente
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex-1">
+                  {clienteEditando ? 'Actualizar Cliente' : 'Crear Cliente'}
                 </button>
                 <button 
                   type="button" 
-                  className="btn-secondary"
-                  onClick={() => setMostrarForm(false)}
+                  onClick={limpiarForm}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
                 >
                   Cancelar
                 </button>
@@ -247,73 +345,85 @@ const Clientes = () => {
         </div>
       )}
 
-      {/* Lista de clientes */}
+      {/* Lista de Clientes */}
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 mt-2">Cargando clientes...</p>
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {clientes.map(cliente => (
-            <div key={cliente.id} className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{cliente.nombre}</h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(cliente.estado)}`}>
-                  {cliente.estado}
-                </span>
-              </div>
-              
-              <div className="space-y-2 text-sm text-gray-600">
-                <p className="flex items-center">
-                  <span className="w-6">📧</span>
-                  {cliente.email}
-                </p>
-                {cliente.telefono && (
-                  <p className="flex items-center">
-                    <span className="w-6">📞</span>
-                    {cliente.telefono}
-                  </p>
-                )}
-                {cliente.empresa && (
-                  <p className="flex items-center">
-                    <span className="w-6">🏢</span>
-                    {cliente.empresa}
-                  </p>
-                )}
-                {cliente.valorPotencial && (
-                  <p className="flex items-center">
-                    <span className="w-6">💰</span>
-                    ${parseFloat(cliente.valorPotencial).toLocaleString()}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2 mt-4 pt-4 border-t">
-                <button className="btn-secondary text-xs py-1 flex-1">📅 Reunión</button>
-                <button className="btn-secondary text-xs py-1 flex-1">✉️ Email</button>
-                <button 
-                  className="bg-red-100 text-red-700 text-xs py-1 px-2 rounded hover:bg-red-200 transition-colors"
-                  onClick={() => eliminarCliente(cliente.id)}
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Contacto</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Empresa</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">Valor Potencial</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {clientesFiltrados.map(cliente => (
+                  <tr key={cliente.id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <td className="px-4 py-4">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{cliente.nombre}</div>
+                        <div className="text-sm text-gray-500 hidden sm:block">{cliente.industria}</div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 hidden md:table-cell">
+                      <div className="text-sm text-gray-900">{cliente.email}</div>
+                      <div className="text-sm text-gray-500">{cliente.telefono}</div>
+                    </td>
+                    <td className="px-4 py-4 hidden lg:table-cell">
+                      <div className="text-sm text-gray-900">{cliente.empresa}</div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getEstadoColor(cliente.estado)}`}>
+                        {getEstadoTexto(cliente.estado)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 hidden xl:table-cell">
+                      <div className="text-sm text-gray-900">
+                        {cliente.valorPotencial ? `$${cliente.valorPotencial.toLocaleString()}` : '-'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => editarCliente(cliente)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          Editar
+                        </button>
+                        <button 
+                          onClick={() => eliminarCliente(cliente.id)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      {clientes.length === 0 && !loading && (
+      {clientesFiltrados.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">👥</div>
+          <div className="text-gray-400 text-6xl mb-4">👥</div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay clientes</h3>
           <p className="text-gray-600 mb-4">Comienza agregando tu primer cliente</p>
           <button 
-            className="btn-primary"
             onClick={() => setMostrarForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200"
           >
-            + Agregar Primer Cliente
+            Agregar Primer Cliente
           </button>
         </div>
       )}
