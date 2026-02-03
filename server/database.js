@@ -227,6 +227,7 @@ const syncDB = async () => {
         }
         console.warn(message);
       }
+      console.log(`✅ Usuario admin creado (${adminEmail} / ${adminPassword})`);
     }
   } catch (error) {
     console.error('❌ Error sincronizando base de datos:', error);
