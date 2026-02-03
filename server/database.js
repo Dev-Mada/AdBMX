@@ -204,17 +204,19 @@ const syncDB = async () => {
     console.log('✅ Modelos sincronizados');
     
     // Crear usuario admin por defecto
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@adbmx.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     const bcrypt = await import('bcryptjs');
-    const adminExists = await Usuario.findOne({ where: { email: 'admin@adbmx.com' } });
+    const adminExists = await Usuario.findOne({ where: { email: adminEmail } });
     if (!adminExists) {
-      const hashedPassword = await bcrypt.default.hash('admin123', 10);
+      const hashedPassword = await bcrypt.default.hash(adminPassword, 10);
       await Usuario.create({
         nombre: 'Administrador',
-        email: 'admin@adbmx.com',
+        email: adminEmail,
         password: hashedPassword,
         rol: 'admin'
       });
-      console.log('✅ Usuario admin creado (admin@adbmx.com / admin123)');
+      console.log(`✅ Usuario admin creado (${adminEmail} / ${adminPassword})`);
     }
   } catch (error) {
     console.error('❌ Error sincronizando base de datos:', error);
