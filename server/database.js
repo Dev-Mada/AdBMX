@@ -206,6 +206,8 @@ const syncDB = async () => {
     // Crear usuario admin por defecto
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@adbmx.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+    const usingDefaultAdminPassword = adminPassword === 'admin123';
+    const isProduction = process.env.NODE_ENV === 'production';
     const bcrypt = await import('bcryptjs');
     const adminExists = await Usuario.findOne({ where: { email: adminEmail } });
     if (!adminExists) {
@@ -216,6 +218,15 @@ const syncDB = async () => {
         password: hashedPassword,
         rol: 'admin'
       });
+      console.log(`✅ Usuario admin creado (${adminEmail})`);
+      if (usingDefaultAdminPassword) {
+        const message = '⚠️ ADMIN_PASSWORD no configurado. Cambia la contraseña por defecto.';
+        if (isProduction) {
+          console.error(`❌ ${message}`);
+          throw new Error('ADMIN_PASSWORD inseguro en producción');
+        }
+        console.warn(message);
+      }
       console.log(`✅ Usuario admin creado (${adminEmail} / ${adminPassword})`);
     }
   } catch (error) {

@@ -12,10 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const isDefaultJwtSecret = JWT_SECRET === 'change-me';
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+if (isDefaultJwtSecret) {
+  if (isProduction) {
+    console.error('❌ JWT_SECRET no configurado. Debes definirlo en producción.');
+    process.exit(1);
+  }
+  console.warn('⚠️ JWT_SECRET no configurado. Usa una clave segura en el entorno.');
+}
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
