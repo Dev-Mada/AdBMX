@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 // Importar modelos y configuración de la base de datos
 import { sequelize, Usuario, Cliente, Oportunidad, Tarea, Contacto, syncDB } from './database.js';
@@ -9,10 +10,39 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
+const isDefaultJwtSecret = JWT_SECRET === 'change-me';
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+if (isDefaultJwtSecret) {
+  if (isProduction) {
+    console.error('❌ JWT_SECRET no configurado. Debes definirlo en producción.');
+    process.exit(1);
+  }
+  console.warn('⚠️ JWT_SECRET no configurado. Usa una clave segura en el entorno.');
+}
+
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Token requerido' });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ success: false, error: 'Token inválido' });
+  }
+};
 
 // ✅ Ruta raíz - Para verificar que el servidor funciona
 app.get('/', (req, res) => {
@@ -81,11 +111,17 @@ app.post('/api/auth/login', async (req, res) => {
     const { password: _, ...usuarioSinPassword } = usuario.toJSON();
 
     // Login exitoso
+    const token = jwt.sign(
+      { id: usuario.id, email: usuario.email, rol: usuario.rol },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
     res.json({
       success: true,
       message: 'Login exitoso',
       user: usuarioSinPassword,
-      token: 'adbmx-token-simulado-' + Date.now() // Token simulado
+      token
     });
 
   } catch (error) {
@@ -97,23 +133,12 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Verificar token (endpoint simulado)
+app.use('/api', authMiddleware);
+
+// Verificar token
 app.get('/api/auth/verify', async (req, res) => {
   try {
-    // En una implementación real, verificarías el token JWT
-    // Por ahora devolvemos un usuario simulado
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token || !token.includes('adbmx-token-simulado')) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'Token inválido' 
-      });
-    }
-
-    // Buscar usuario admin por defecto
-    const usuario = await Usuario.findOne({ 
-      where: { email: 'admin@adbmx.com' },
+    const usuario = await Usuario.findByPk(req.user?.id, {
       attributes: { exclude: ['password'] }
     });
 
