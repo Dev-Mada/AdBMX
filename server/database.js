@@ -199,10 +199,10 @@ const syncDB = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Conexión a MySQL establecida');
-    
+
     await sequelize.sync({ force: false });
     console.log('✅ Modelos sincronizados');
-    
+
     // Crear usuario admin por defecto
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@adbmx.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
@@ -210,6 +210,7 @@ const syncDB = async () => {
     const isProduction = process.env.NODE_ENV === 'production';
     const bcrypt = await import('bcryptjs');
     const adminExists = await Usuario.findOne({ where: { email: adminEmail } });
+
     if (!adminExists) {
       const hashedPassword = await bcrypt.default.hash(adminPassword, 10);
       await Usuario.create({
@@ -218,7 +219,9 @@ const syncDB = async () => {
         password: hashedPassword,
         rol: 'admin'
       });
+
       console.log(`✅ Usuario admin creado (${adminEmail})`);
+
       if (usingDefaultAdminPassword) {
         const message = '⚠️ ADMIN_PASSWORD no configurado. Cambia la contraseña por defecto.';
         if (isProduction) {
@@ -227,10 +230,13 @@ const syncDB = async () => {
         }
         console.warn(message);
       }
-      console.log(`✅ Usuario admin creado (${adminEmail} / ${adminPassword})`);
     }
+
+    return true;
   } catch (error) {
-    console.error('❌ Error sincronizando base de datos:', error);
+    const dbErrorDetail = error.message || error?.name || error?.parent?.code || 'Error desconocido';
+    console.error(`❌ Error sincronizando base de datos: ${dbErrorDetail}`);
+    return false;
   }
 };
 

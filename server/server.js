@@ -15,9 +15,65 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
 const isDefaultJwtSecret = JWT_SECRET === 'change-me';
 const isProduction = process.env.NODE_ENV === 'production';
 
+let isDatabaseReady = false;
+const DB_RETRY_INTERVAL_MS = Number(process.env.DB_RETRY_INTERVAL_MS || 30000);
+
+const isDatabaseConnectionError = (error) => {
+  if (!error) return false;
+
+  const sequelizeErrorNames = new Set([
+    'SequelizeConnectionError',
+    'SequelizeConnectionRefusedError',
+    'SequelizeHostNotFoundError',
+    'SequelizeHostNotReachableError',
+    'SequelizeAccessDeniedError'
+  ]);
+
+  return (
+    sequelizeErrorNames.has(error.name)
+    || error.code === 'ECONNREFUSED'
+    || error?.parent?.code === 'ECONNREFUSED'
+    || error?.original?.code === 'ECONNREFUSED'
+  );
+};
+
+const runDbCheck = async () => {
+  const synced = await syncDB();
+
+  if (synced && !isDatabaseReady) {
+    console.log('✅ Base de datos lista para recibir peticiones');
+  }
+
+  if (!synced && isDatabaseReady) {
+    console.warn('⚠️ Se perdió la conexión con la base de datos. Reintentando...');
+  }
+
+  isDatabaseReady = synced;
+  return synced;
+};
+
+const scheduleDbRetries = () => {
+  setInterval(async () => {
+    if (!isDatabaseReady) {
+      await runDbCheck();
+    }
+  }, DB_RETRY_INTERVAL_MS).unref();
+};
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+app.use('/api', (req, res, next) => {
+  if (isDatabaseReady) {
+    return next();
+  }
+
+  return res.status(503).json({
+    success: false,
+    error: 'Base de datos no disponible. Intenta nuevamente en unos segundos.'
+  });
+});
 
 if (isDefaultJwtSecret) {
   if (isProduction) {
@@ -125,10 +181,18 @@ app.post('/api/auth/login', async (req, res) => {
     });
 
   } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      console.error('Error en login: base de datos no disponible');
+      return res.status(503).json({
+        success: false,
+        error: 'Base de datos no disponible. Intenta nuevamente en unos segundos.'
+      });
+    }
+
     console.error('Error en login:', error);
-    res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      error: 'Error interno del servidor' 
+      error: 'Error interno del servidor'
     });
   }
 });
@@ -337,7 +401,9 @@ app.post('/api/contactos', async (req, res) => {
 app.listen(PORT, async () => {
   console.log(`🚀 Servidor ADBMX corriendo en puerto ${PORT}`);
   console.log(`📧 Endpoint de login: http://localhost:${PORT}/api/auth/login`);
-  await syncDB();
+
+  await runDbCheck();
+  scheduleDbRetries();
 });
 
 export default app;
