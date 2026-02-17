@@ -59,7 +59,7 @@ const Layout = ({ children }) => {
         bg-gray-900 shadow-xl transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
         lg:translate-x-0
-        ${isMobile ? 'w-64' : 'w-64'}
+        w-64
         flex flex-col
       `}>
         {/* Header */}
