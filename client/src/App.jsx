@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/Login'
@@ -32,11 +31,11 @@ function App() {
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
-  
+
   if (loading) {
     return <div className="loading">Cargando ADBMX...</div>
   }
-  
+
   return user ? children : <Navigate to="/login" />
 }
 
