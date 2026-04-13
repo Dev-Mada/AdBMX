@@ -10,8 +10,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
+import { Users, CheckSquare, Briefcase, DollarSign, TrendingUp, Phone, Mail, UserCheck, CheckCircle, ArrowUp } from 'lucide-react'
 
-// Registrar componentes de Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -33,13 +33,33 @@ const Dashboard = () => {
   })
 
   const [actividadReciente, setActividadReciente] = useState([
-    { tipo: 'llamada', descripcion: 'Llamada con María González de TechCorp', tiempo: new Date() },
-    { tipo: 'email', descripcion: 'Email enviado a Juan Pérez', tiempo: new Date(Date.now() - 3600000) },
-    { tipo: 'reunion', descripcion: 'Reunión con equipo de ventas', tiempo: new Date(Date.now() - 7200000) },
+    { tipo: 'llamada', descripcion: 'Llamada con Maria Gonzalez de TechCorp', tiempo: new Date() },
+    { tipo: 'email', descripcion: 'Email enviado a Juan Perez', tiempo: new Date(Date.now() - 3600000) },
+    { tipo: 'reunion', descripcion: 'Reunion con equipo de ventas', tiempo: new Date(Date.now() - 7200000) },
     { tipo: 'tarea', descripcion: 'Tarea completada: Seguimiento cliente', tiempo: new Date(Date.now() - 10800000) }
   ])
 
-  // Configuración para el gráfico de barras
+  const getIconoActividad = (tipo) => {
+    const iconos = {
+      llamada: Phone,
+      email: Mail,
+      reunion: UserCheck,
+      tarea: CheckCircle
+    }
+    const Icon = iconos[tipo] || CheckCircle
+    return <Icon size={18} />
+  }
+
+  const getColorActividad = (tipo) => {
+    const colores = {
+      llamada: 'bg-blue-100 text-blue-600',
+      email: 'bg-green-100 text-green-600',
+      reunion: 'bg-purple-100 text-purple-600',
+      tarea: 'bg-orange-100 text-orange-600'
+    }
+    return colores[tipo] || 'bg-gray-100 text-gray-600'
+  }
+
   const barChartData = {
     labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     datasets: [
@@ -59,12 +79,8 @@ const Dashboard = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: false,
-      },
+      legend: { display: false },
+      title: { display: false },
       tooltip: {
         backgroundColor: 'rgba(15, 23, 42, 0.9)',
         titleColor: 'white',
@@ -82,17 +98,11 @@ const Dashboard = () => {
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: '#64748b',
-        }
+        grid: { display: false },
+        ticks: { color: '#64748b' }
       },
       y: {
-        grid: {
-          color: 'rgba(100, 116, 139, 0.1)',
-        },
+        grid: { color: 'rgba(100, 116, 139, 0.1)' },
         ticks: {
           color: '#64748b',
           callback: function(value) {
@@ -104,9 +114,8 @@ const Dashboard = () => {
     },
   }
 
-  // Configuración para el gráfico de dona
   const doughnutChartData = {
-    labels: ['Nuevo', 'Calificado', 'Propuesta', 'Negociación', 'Ganado'],
+    labels: ['Nuevo', 'Calificado', 'Propuesta', 'Negociacion', 'Ganado'],
     datasets: [
       {
         data: [12, 19, 8, 5, 3],
@@ -142,9 +151,7 @@ const Dashboard = () => {
           usePointStyle: true,
           padding: 20,
           color: '#64748b',
-          font: {
-            size: 12
-          }
+          font: { size: 12 }
         }
       },
       tooltip: {
@@ -169,11 +176,10 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard Principal</h1>
-          <p className="text-gray-600 mt-1">Bienvenido de vuelta! Resumen de tu CRM ADBMX</p>
+          <p className="text-gray-600 mt-1">Resumen de tu CRM ADBMX</p>
         </div>
         <div className="text-sm text-gray-500 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
           {new Date().toLocaleDateString('es-ES', { 
@@ -185,9 +191,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Clientes Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
           <div className="flex items-center justify-between">
             <div>
@@ -195,21 +199,18 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm">Total Clientes</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-xl">
-              <div className="w-6 h-6 text-blue-600">👥</div>
+              <Users size={24} className="text-blue-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
             <span className="text-green-600 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
+              <ArrowUp size={16} className="mr-1" />
               12%
             </span>
             <span className="text-gray-500 ml-2">vs mes anterior</span>
           </div>
         </div>
 
-        {/* Tareas Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 border-l-4 border-l-orange-500">
           <div className="flex items-center justify-between">
             <div>
@@ -217,7 +218,7 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm">Tareas Pendientes</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-xl">
-              <div className="w-6 h-6 text-orange-600">✅</div>
+              <CheckSquare size={24} className="text-orange-600" />
             </div>
           </div>
           <div className="mt-4">
@@ -228,7 +229,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Oportunidades Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
           <div className="flex items-center justify-between">
             <div>
@@ -236,21 +236,18 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm">Oportunidades Activas</p>
             </div>
             <div className="p-3 bg-green-100 rounded-xl">
-              <div className="w-6 h-6 text-green-600">💼</div>
+              <Briefcase size={24} className="text-green-600" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm">
             <span className="text-green-600 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-              </svg>
+              <ArrowUp size={16} className="mr-1" />
               8%
             </span>
             <span className="text-gray-500 ml-2">en progreso</span>
           </div>
         </div>
 
-        {/* Ventas Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 border-l-4 border-l-purple-500">
           <div className="flex items-center justify-between">
             <div>
@@ -258,7 +255,7 @@ const Dashboard = () => {
               <p className="text-gray-600 text-sm">Ventas del Mes</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-xl">
-              <div className="w-6 h-6 text-purple-600">💰</div>
+              <DollarSign size={24} className="text-purple-600" />
             </div>
           </div>
           <div className="mt-4">
@@ -273,9 +270,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h3 className="text-lg font-semibold text-gray-900">Ventas Mensuales 2024</h3>
@@ -285,34 +280,23 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="h-80">
-            <Bar 
-              data={barChartData} 
-              options={barChartOptions}
-            />
+            <Bar data={barChartData} options={barChartOptions} />
           </div>
         </div>
         
-        {/* Sidebar */}
         <div className="space-y-6">
-          {/* Actividad Reciente */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h3>
             <div className="space-y-4">
               {actividadReciente.map((actividad, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200">
-                  <div className={`p-2 rounded-lg ${
-                    actividad.tipo === 'llamada' ? 'bg-blue-100 text-blue-600' : 
-                    actividad.tipo === 'email' ? 'bg-green-100 text-green-600' :
-                    actividad.tipo === 'reunion' ? 'bg-purple-100 text-purple-600' : 'bg-orange-100 text-orange-600'
-                  }`}>
-                    {actividad.tipo === 'llamada' ? '📞' : 
-                     actividad.tipo === 'email' ? '✉️' :
-                     actividad.tipo === 'reunion' ? '👥' : '✅'}
+                  <div className={`p-2 rounded-lg ${getColorActividad(actividad.tipo)}`}>
+                    {getIconoActividad(actividad.tipo)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 truncate">{actividad.descripcion}</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(actividad.tiempo).toLocaleDateString()} • 
+                      {new Date(actividad.tiempo).toLocaleDateString()} - 
                       {new Date(actividad.tiempo).toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}
                     </p>
                   </div>
@@ -324,14 +308,10 @@ const Dashboard = () => {
             </button>
           </div>
           
-          {/* Oportunidades por Etapa */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Oportunidades por Etapa</h3>
             <div className="h-48">
-              <Doughnut 
-                data={doughnutChartData} 
-                options={doughnutChartOptions}
-              />
+              <Doughnut data={doughnutChartData} options={doughnutChartOptions} />
             </div>
           </div>
         </div>

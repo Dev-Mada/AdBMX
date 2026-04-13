@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Plus, Search, X, Edit2, Trash2, TrendingUp, DollarSign, Calendar, Users, CheckCircle, ArrowRight } from 'lucide-react'
 
 const Oportunidades = () => {
   const [oportunidades, setOportunidades] = useState([])
@@ -21,34 +22,33 @@ const Oportunidades = () => {
     { id: 'nuevo', nombre: 'Nuevo', probabilidad: 10, color: 'bg-blue-100 text-blue-800' },
     { id: 'calificado', nombre: 'Calificado', probabilidad: 30, color: 'bg-green-100 text-green-800' },
     { id: 'propuesta', nombre: 'Propuesta', probabilidad: 50, color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'negociacion', nombre: 'Negociación', probabilidad: 70, color: 'bg-orange-100 text-orange-800' },
+    { id: 'negociacion', nombre: 'Negociacion', probabilidad: 70, color: 'bg-orange-100 text-orange-800' },
     { id: 'ganado', nombre: 'Ganado', probabilidad: 100, color: 'bg-purple-100 text-purple-800' },
     { id: 'perdido', nombre: 'Perdido', probabilidad: 0, color: 'bg-red-100 text-red-800' }
   ]
 
   useEffect(() => {
-    // Datos de ejemplo
     setOportunidades([
       {
         id: 1,
-        titulo: 'Implementación CRM Enterprise',
+        titulo: 'Implementacion CRM Enterprise',
         cliente: { nombre: 'TechCorp SA', id: 1 },
         valor: 50000,
         etapa: 'propuesta',
         probabilidad: 50,
         fechaCierre: '2024-12-15',
-        descripcion: 'Implementación completa del sistema CRM',
+        descripcion: 'Implementacion completa del sistema CRM',
         fechaCreacion: new Date('2024-10-01')
       },
       {
         id: 2,
-        titulo: 'Soporte Técnico Anual',
+        titulo: 'Soporte Tecnico Anual',
         cliente: { nombre: 'Innovate Labs', id: 2 },
         valor: 25000,
         etapa: 'negociacion',
         probabilidad: 70,
         fechaCierre: '2024-11-30',
-        descripcion: 'Contrato de soporte técnico premium',
+        descripcion: 'Contrato de soporte tecnico premium',
         fechaCreacion: new Date('2024-09-15')
       }
     ])
@@ -64,7 +64,7 @@ const Oportunidades = () => {
       const nuevaOportunidad = {
         id: Date.now(),
         ...formData,
-        cliente: { nombre: 'Cliente', id: 1 }, // En una app real, buscaría el cliente
+        cliente: { nombre: 'Cliente', id: 1 },
         fechaCreacion: new Date()
       }
       setOportunidades(prev => [nuevaOportunidad, ...prev])
@@ -115,7 +115,6 @@ const Oportunidades = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Oportunidades</h1>
@@ -123,13 +122,13 @@ const Oportunidades = () => {
         </div>
         <button 
           onClick={() => setMostrarForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 w-full sm:w-auto text-sm sm:text-base"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 w-full sm:w-auto text-sm sm:text-base flex items-center justify-center gap-2"
         >
+          <Plus size={18} />
           Nueva Oportunidad
         </button>
       </div>
 
-      {/* Resumen del Pipeline */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
         {etapas.map(etapa => (
           <div key={etapa.id} className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-200 text-center">
@@ -137,14 +136,14 @@ const Oportunidades = () => {
               {oportunidades.filter(op => op.etapa === etapa.id).length}
             </div>
             <div className="text-xs sm:text-sm text-gray-600 mt-1">{etapa.nombre}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              ${getValorTotalPorEtapa(etapa.id).toLocaleString()}
+            <div className="text-xs text-gray-500 mt-1 flex items-center justify-center gap-1">
+              <DollarSign size={12} />
+              {getValorTotalPorEtapa(etapa.id).toLocaleString()}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3">
         <select 
           value={filtroEtapa}
@@ -156,12 +155,12 @@ const Oportunidades = () => {
             <option key={etapa.id} value={etapa.id}>{etapa.nombre}</option>
           ))}
         </select>
-        <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border flex-1 text-center">
+        <div className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border flex-1 text-center flex items-center justify-center gap-2">
+          <TrendingUp size={16} />
           Valor total del pipeline: ${oportunidades.reduce((sum, op) => sum + (op.valor || 0), 0).toLocaleString()}
         </div>
       </div>
 
-      {/* Modal Form */}
       {mostrarForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -170,8 +169,8 @@ const Oportunidades = () => {
                 <h2 className="text-xl font-bold text-gray-900">
                   {oportunidadEditando ? 'Editar Oportunidad' : 'Nueva Oportunidad'}
                 </h2>
-                <button onClick={limpiarForm} className="text-gray-500 hover:text-gray-700 text-2xl">
-                  ×
+                <button onClick={limpiarForm} className="text-gray-500 hover:text-gray-700">
+                  <X size={24} />
                 </button>
               </div>
             </div>
@@ -179,7 +178,7 @@ const Oportunidades = () => {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Titulo *</label>
                   <input
                     type="text"
                     required
@@ -192,12 +191,15 @@ const Oportunidades = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Valor</label>
-                    <input
-                      type="number"
-                      value={formData.valor}
-                      onChange={(e) => setFormData({...formData, valor: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
+                    <div className="relative">
+                      <DollarSign size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="number"
+                        value={formData.valor}
+                        onChange={(e) => setFormData({...formData, valor: e.target.value})}
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
                   </div>
                   
                   <div>
@@ -233,17 +235,20 @@ const Oportunidades = () => {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de cierre</label>
-                    <input
-                      type="date"
-                      value={formData.fechaCierre}
-                      onChange={(e) => setFormData({...formData, fechaCierre: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
+                    <div className="relative">
+                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="date"
+                        value={formData.fechaCierre}
+                        onChange={(e) => setFormData({...formData, fechaCierre: e.target.value})}
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripcion</label>
                   <textarea
                     rows="3"
                     value={formData.descripcion}
@@ -280,7 +285,6 @@ const Oportunidades = () => {
         </div>
       )}
 
-      {/* Lista de Oportunidades */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -307,11 +311,15 @@ const Oportunidades = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 hidden sm:table-cell">
-                      <div className="text-sm text-gray-900">{oportunidad.cliente.nombre}</div>
+                      <div className="text-sm text-gray-900 flex items-center gap-2">
+                        <Users size={14} className="text-gray-400" />
+                        {oportunidad.cliente.nombre}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        ${oportunidad.valor?.toLocaleString()}
+                      <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                        <DollarSign size={14} className="text-gray-400" />
+                        {oportunidad.valor?.toLocaleString()}
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -331,7 +339,8 @@ const Oportunidades = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 hidden lg:table-cell">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-gray-900 flex items-center gap-1">
+                        <Calendar size={14} className="text-gray-400" />
                         {oportunidad.fechaCierre ? new Date(oportunidad.fechaCierre).toLocaleDateString() : '-'}
                       </div>
                     </td>
@@ -340,7 +349,7 @@ const Oportunidades = () => {
                         <select 
                           value={oportunidad.etapa}
                           onChange={(e) => moverEtapa(oportunidad.id, e.target.value)}
-                          className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 flex items-center gap-1"
                         >
                           {etapas.map(etapa => (
                             <option key={etapa.id} value={etapa.id}>Mover a {etapa.nombre}</option>
@@ -348,8 +357,9 @@ const Oportunidades = () => {
                         </select>
                         <button 
                           onClick={() => eliminarOportunidad(oportunidad.id)}
-                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1"
+                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 flex items-center gap-1"
                         >
+                          <Trash2 size={12} />
                           Eliminar
                         </button>
                       </div>
@@ -364,13 +374,16 @@ const Oportunidades = () => {
 
       {oportunidadesFiltradas.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">💼</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <TrendingUp size={32} className="text-gray-300" />
+          </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay oportunidades</h3>
           <p className="text-gray-600 mb-4">Comienza agregando tu primera oportunidad de venta</p>
           <button 
             onClick={() => setMostrarForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 inline-flex items-center gap-2"
           >
+            <Plus size={18} />
             Agregar Primera Oportunidad
           </button>
         </div>

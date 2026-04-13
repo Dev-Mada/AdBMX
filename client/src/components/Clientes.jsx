@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { Plus, Search, Edit2, Trash2, X, Mail, Phone, Building, User } from 'lucide-react'
 
 const Clientes = () => {
   const [clientes, setClientes] = useState([])
@@ -30,16 +31,15 @@ const Clientes = () => {
 
   const cargarClientes = async () => {
     setLoading(true)
-    // Simulación de datos
     setTimeout(() => {
       setClientes([
         {
           id: 1,
-          nombre: 'María González',
+          nombre: 'Maria Gonzalez',
           email: 'maria@techcorp.com',
           telefono: '+34 612 345 678',
           empresa: 'TechCorp SA',
-          industria: 'Tecnología',
+          industria: 'Tecnologia',
           estado: 'cliente',
           valorPotencial: 50000,
           fuente: 'Referencia',
@@ -47,11 +47,11 @@ const Clientes = () => {
         },
         {
           id: 2,
-          nombre: 'Carlos Rodríguez',
+          nombre: 'Carlos Rodriguez',
           email: 'carlos@innovate.com',
           telefono: '+34 623 456 789',
           empresa: 'Innovate Labs',
-          industria: 'Consultoría',
+          industria: 'Consultoria',
           estado: 'prospecto',
           valorPotencial: 75000,
           fuente: 'Web',
@@ -65,14 +65,12 @@ const Clientes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (clienteEditando) {
-      // Editar cliente
       setClientes(prev => prev.map(cliente => 
         cliente.id === clienteEditando.id 
           ? { ...cliente, ...formData }
           : cliente
       ))
     } else {
-      // Nuevo cliente
       const nuevoCliente = {
         id: Date.now(),
         ...formData,
@@ -154,7 +152,6 @@ const Clientes = () => {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Clientes</h1>
@@ -162,21 +159,22 @@ const Clientes = () => {
         </div>
         <button 
           onClick={() => setMostrarForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 w-full sm:w-auto text-sm sm:text-base"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 w-full sm:w-auto text-sm sm:text-base flex items-center justify-center gap-2"
         >
+          <Plus size={18} />
           Agregar Cliente
         </button>
       </div>
 
-      {/* Filtros */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-2 relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Buscar clientes por nombre, email o empresa..."
+            placeholder="Buscar clientes..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
         </div>
         <select 
@@ -195,7 +193,6 @@ const Clientes = () => {
         </div>
       </div>
 
-      {/* Modal Form */}
       {mostrarForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -206,9 +203,9 @@ const Clientes = () => {
                 </h2>
                 <button 
                   onClick={limpiarForm}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  ×
+                  <X size={24} />
                 </button>
               </div>
             </div>
@@ -217,44 +214,56 @@ const Clientes = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
+                  <div className="relative">
+                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      required
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
+                  <div className="relative">
+                    <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                  <input
-                    type="tel"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
+                  <div className="relative">
+                    <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="tel"
+                      value={formData.telefono}
+                      onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
-                  <input
-                    type="text"
-                    value={formData.empresa}
-                    onChange={(e) => setFormData({...formData, empresa: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
+                  <div className="relative">
+                    <Building size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={formData.empresa}
+                      onChange={(e) => setFormData({...formData, empresa: e.target.value})}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 
                 <div>
@@ -308,7 +317,7 @@ const Clientes = () => {
                 </div>
                 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Direccion</label>
                   <input
                     type="text"
                     value={formData.direccion}
@@ -345,7 +354,6 @@ const Clientes = () => {
         </div>
       )}
 
-      {/* Lista de Clientes */}
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -360,7 +368,7 @@ const Clientes = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Contacto</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Empresa</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">Valor Potencial</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">Valor</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
@@ -394,14 +402,16 @@ const Clientes = () => {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => editarCliente(cliente)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
                         >
+                          <Edit2 size={14} />
                           Editar
                         </button>
                         <button 
                           onClick={() => eliminarCliente(cliente.id)}
-                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                          className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1"
                         >
+                          <Trash2 size={14} />
                           Eliminar
                         </button>
                       </div>
@@ -416,13 +426,16 @@ const Clientes = () => {
 
       {clientesFiltrados.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">👥</div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <User size={32} className="text-gray-400" />
+          </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay clientes</h3>
           <p className="text-gray-600 mb-4">Comienza agregando tu primer cliente</p>
           <button 
             onClick={() => setMostrarForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 inline-flex items-center gap-2"
           >
+            <Plus size={18} />
             Agregar Primer Cliente
           </button>
         </div>

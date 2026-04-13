@@ -18,17 +18,10 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('adbmx_token')
     const savedUser = localStorage.getItem('adbmx_user')
     
-    console.log('🔄 AuthProvider iniciando...') // Debug
-    console.log('🔑 Token en localStorage:', token) // Debug
-    console.log('👤 Usuario en localStorage:', savedUser) // Debug
-    
     if (token && savedUser) {
       try {
-        // Usar el usuario guardado en localStorage para evitar verificación
         setUser(JSON.parse(savedUser))
-        console.log('✅ Usuario cargado desde localStorage') // Debug
       } catch (error) {
-        console.error('❌ Error parsing saved user:', error)
         localStorage.removeItem('adbmx_token')
         localStorage.removeItem('adbmx_user')
       }
@@ -38,7 +31,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('🌐 Haciendo request a /api/auth/login...') // Debug
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
@@ -47,23 +39,18 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password })
       })
 
-      console.log('📡 Response status:', response.status) // Debug
       const data = await response.json()
-      console.log('📦 Response data:', data) // Debug
 
       if (data.success) {
         localStorage.setItem('adbmx_token', data.token)
         localStorage.setItem('adbmx_user', JSON.stringify(data.user))
         setUser(data.user)
-        console.log('✅ Login exitoso, usuario guardado') // Debug
         return { success: true }
       } else {
-        console.log('❌ Login fallido:', data.error) // Debug
         return { success: false, error: data.error }
       }
     } catch (error) {
-      console.error('❌ Error de conexión:', error) // Debug
-      return { success: false, error: 'Error de conexión con el servidor' }
+      return { success: false, error: 'Error de conexion con el servidor' }
     }
   }
 
