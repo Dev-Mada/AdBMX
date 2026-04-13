@@ -12,7 +12,8 @@ import {
   Legend,
   PointElement,
 } from 'chart.js'
-import { TrendingUp, TrendingDown, DollarSign, Users, Target, Activity, Calendar, FileText } from 'lucide-react'
+import api from '../lib/api'
+import { useToast } from './ui/Toast'
 
 ChartJS.register(
   CategoryScale,
@@ -27,255 +28,232 @@ ChartJS.register(
 )
 
 const Reportes = () => {
-  const [filtroFecha, setFiltroFecha] = useState('30d')
-  const [datosReportes, setDatosReportes] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [metricas, setMetricas] = useState({
+    ingresosTotales: 0,
+    conversion: 0,
+    clientesTotal: 0,
+    oportunidadesActivas: 0,
+  })
+  const [ventasMensuales, setVentasMensuales] = useState([])
+  const [fuentesData, setFuentesData] = useState([])
+  const [conversionData, setConversionData] = useState([])
+  const [actividadData, setActividadData] = useState([])
+  const toast = useToast()
 
-  useEffect(() => {
-    setDatosReportes({
-      ventasMensuales: [32000, 29000, 35000, 42000, 38000, 45280, 41000, 48000, 52000, 61000, 58000, 72000],
-      leadsFuentes: [45, 28, 15, 8, 4],
-      conversionEtapas: [100, 65, 42, 28, 15],
-      rendimientoVendedores: [85, 72, 68, 61, 55]
-    })
-  }, [filtroFecha])
+  useEffect(() => { cargarDatos(); }, [])
 
-  const ventasChartData = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-    datasets: [
-      {
-        label: 'Ventas Mensuales',
-        data: datosReportes.ventasMensuales || [],
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 2,
-        borderRadius: 4,
-      },
-    ],
+  const cargarDatos = async () => {
+    setLoading(true)
+    try {
+      const [clientesRes, oportunidadesRes, tareasRes] = await Promise.all([
+        api.get('/clientes'),
+        api.get('/oportunidades'),
+        api.get('/tareas')
+      ])
+
+      const clientes = clientesRes.data.clientes || []
+      const oportunidades = oportunidadesRes.data.opportunidades || []
+      const tareas = tareasRes.data.tareas || []
+
+      const ganadas = oportunidades.filter(o => o.etapa === 'ganado')
+      const activas = oportunidades.filter(o => !['ganado', 'perdido'].includes(o.etapa))
+      const totalOportunidades = oportunidades.length
+
+      const ingresosTotales = ganadas.reduce((sum, o) => sum + (o.valor || 0), 0)
+      const conversion = totalOportunidades > 0 ? Math.round((ganadas.length / totalOportunidades) * 100) : 0
+
+      setMetricas({
+        ingresosTotales,
+        conversion,
+        clientesTotal: clientes.length,
+        oportunidadesActivas: activas.length,
+      })
+
+      const meses = Array(12).fill(0)
+      const anioActual = new Date().getFullYear()
+      ganadas.forEach(o => {
+        const fecha = new Date(o.fechaCierre || o.updatedAt)
+        if (fecha.getFullYear() === anioActual) {
+          meses[fecha.getMonth()] += o.valor || 0
+        }
+      })
+      setVentasMensuales(meses)
+
+      const fuentesCount = {}
+      clientes.forEach(c => {
+        const fuente = c.fuente || 'otros'
+        fuentesCount[fuente] = (fuentesCount[fuente] || 0) + 1
+      })
+      const labels = Object.keys(fuentesCount)
+      const values = Object.values(fuentesCount)
+      setFuentesData({ labels, values })
+
+      const etapas = ['nuevo', 'calificado', 'propuesta', 'negociacion', 'ganado']
+      const etapasCount = etapas.map(e => oportunidades.filter(o => o.etapa === e).length)
+      setConversionData({ labels: ['Leads', 'Calificado', 'Propuesta', 'Negociacion', 'Ganados'], data: etapasCount })
+
+      const nuevasClientes = clientes.filter(c => {
+        const fecha = new Date(c.fechaCreacion || c.createdAt)
+        const hace30d = new Date()
+        hace30d.setDate(hace30d.getDate() - 30)
+        return fecha >= hace30d
+      }).length
+
+      const nuevasOportunidades = oportunidades.filter(o => {
+        const fecha = new Date(o.createdAt)
+        const hace30d = new Date()
+        hace30d.setDate(hace30d.getDate() - 30)
+        return fecha >= hace30d
+      }).length
+
+      const tareasCompletadas = tareas.filter(t => t.estado === 'completada').length
+
+      setActividadData([
+        { actividad: 'Nuevos Clientes', cantidad: nuevasClientes },
+        { actividad: 'Oportunidades Creadas', cantidad: nuevasOportunidades },
+        { actividad: 'Tareas Completadas', cantidad: tareasCompletadas },
+        { actividad: 'Oportunidades Activas', cantidad: activas.length }
+      ])
+
+    } catch (error) {
+      console.error('Error cargando reportes:', error)
+      toast.error('Error al cargar reportes')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const ventasChartOptions = {
+  const barChartData = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    datasets: [{
+      label: 'Ventas Mensuales',
+      data: ventasMensuales,
+      backgroundColor: 'rgba(17, 24, 39, 0.8)',
+      borderRadius: 4,
+    }],
+  }
+
+  const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function(value) {
-            return '$' + (value / 1000).toFixed(0) + 'k'
-          }
-        }
-      }
+      y: { beginAtZero: true, ticks: { callback: (v) => '$' + (v/1000).toFixed(0) + 'k' } }
     },
   }
 
   const fuentesChartData = {
-    labels: ['Sitio Web', 'Referencias', 'Redes Sociales', 'Eventos', 'Publicidad'],
-    datasets: [
-      {
-        data: datosReportes.leadsFuentes || [],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-        ],
-        borderWidth: 2,
-        borderColor: '#fff'
-      },
-    ],
+    labels: fuentesData.labels || ['Web', 'Referencia', 'Redes', 'Evento'],
+    datasets: [{
+      data: fuentesData.values || [10, 10, 10, 10],
+      backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
+      borderWidth: 0,
+    }],
   }
 
   const conversionChartData = {
-    labels: ['Leads', 'Calificados', 'Propuesta', 'Negociacion', 'Ganados'],
-    datasets: [
-      {
-        label: 'Tasa de Conversion',
-        data: datosReportes.conversionEtapas || [],
-        borderColor: 'rgba(16, 185, 129, 1)',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        tension: 0.4,
-        fill: true
-      },
-    ],
+    labels: conversionData.labels || [],
+    datasets: [{
+      label: 'Oportunidades',
+      data: conversionData.data || [],
+      backgroundColor: 'rgba(16, 185, 129, 0.8)',
+      borderRadius: 4,
+    }],
   }
 
-  const metricas = [
-    { titulo: 'Ingresos Totales', valor: '$452,800', cambio: '+12%', tendencia: 'up' },
-    { titulo: 'Conversion', valor: '24%', cambio: '+3%', tendencia: 'up' },
-    { titulo: 'CAC', valor: '$1,250', cambio: '-5%', tendencia: 'down' },
-    { titulo: 'LTV', valor: '$8,450', cambio: '+8%', tendencia: 'up' }
-  ]
+  const doughnutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-48"></div>
+          <div className="grid grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>)}
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="h-80 bg-gray-200 rounded-lg"></div>
+            <div className="h-80 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Reportes</h1>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">Metricas y analisis de rendimiento</p>
+    <div className="p-6 lg:p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-900">Reportes</h1>
+        <p className="text-gray-500 mt-1">Metricas y analisis de rendimiento</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-sm text-gray-500 mb-1">Ingresos Totales</p>
+          <p className="text-2xl font-semibold text-gray-900">${metricas.ingresosTotales.toLocaleString()}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar size={18} className="text-gray-400" />
-          <select 
-            value={filtroFecha}
-            onChange={(e) => setFiltroFecha(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-          >
-            <option value="7d">Ultimos 7 dias</option>
-            <option value="30d">Ultimos 30 dias</option>
-            <option value="90d">Ultimos 90 dias</option>
-            <option value="1y">Ultimo ano</option>
-          </select>
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-sm text-gray-500 mb-1">Conversion</p>
+          <p className="text-2xl font-semibold text-gray-900">{metricas.conversion}%</p>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-sm text-gray-500 mb-1">Total Clientes</p>
+          <p className="text-2xl font-semibold text-gray-900">{metricas.clientesTotal}</p>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <p className="text-sm text-gray-500 mb-1">Oportunidades Activas</p>
+          <p className="text-2xl font-semibold text-gray-900">{metricas.oportunidadesActivas}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {metricas.map((metrica, index) => (
-          <div key={index} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <div className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-              <DollarSign size={20} className="text-blue-600" />
-              {metrica.valor}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">{metrica.titulo}</div>
-            <div className={`text-xs mt-2 flex items-center gap-1 ${
-              metrica.tendencia === 'up' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {metrica.tendencia === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-              {metrica.cambio} vs periodo anterior
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <TrendingUp size={20} className="text-blue-600" />
-            Ventas Mensuales
-          </h3>
-          <div className="h-64 sm:h-80">
-            <Bar data={ventasChartData} options={ventasChartOptions} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Users size={20} className="text-green-600" />
-            Fuentes de Leads
-          </h3>
-          <div className="h-64 sm:h-80">
-            <Doughnut 
-              data={fuentesChartData} 
-              options={{ 
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'bottom'
-                  }
-                }
-              }} 
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Target size={20} className="text-purple-600" />
-            Tasa de Conversion
-          </h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Ventas Mensuales</h3>
           <div className="h-64">
-            <Line 
+            <Bar data={barChartData} options={barChartOptions} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Fuentes de Clientes</h3>
+          <div className="h-64">
+            <Doughnut data={fuentesChartData} options={doughnutOptions} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Oportunidades por Etapa</h3>
+          <div className="h-64">
+            <Bar 
               data={conversionChartData} 
               options={{ 
-                responsive: true,
-                maintainAspectRatio: false,
+                ...barChartOptions, 
+                indexAxis: 'y',
                 plugins: { legend: { display: false } }
               }} 
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Activity size={20} className="text-orange-600" />
-            Resumen de Actividad
-          </h3>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Resumen de Actividad</h3>
           <div className="space-y-4">
-            {[
-              { actividad: 'Nuevos Clientes', cantidad: 12, cambio: '+20%' },
-              { actividad: 'Oportunidades Creadas', cantidad: 28, cambio: '+15%' },
-              { actividad: 'Tareas Completadas', cantidad: 156, cambio: '+8%' },
-              { actividad: 'Reuniones Realizadas', cantidad: 45, cambio: '+25%' }
-            ].map((item, index) => (
+            {actividadData.map((item, index) => (
               <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-gray-900">{item.actividad}</div>
-                  <div className="text-xs text-green-600">{item.cambio}</div>
                 </div>
-                <div className="text-lg font-bold text-blue-600">{item.cantidad}</div>
+                <div className="text-lg font-bold text-gray-900">{item.cantidad}</div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText size={20} className="text-blue-600" />
-            Rendimiento por Vendedor
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ventas</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oportunidades</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasa Conversion</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Promedio</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {[
-                { nombre: 'Ana Garcia', ventas: 8, oportunidades: 12, conversion: '67%', valorPromedio: '$45,200' },
-                { nombre: 'Carlos Ruiz', ventas: 6, oportunidades: 10, conversion: '60%', valorPromedio: '$38,500' },
-                { nombre: 'Maria Lopez', ventas: 5, oportunidades: 8, conversion: '63%', valorPromedio: '$52,100' },
-                { nombre: 'David Chen', ventas: 7, oportunidades: 11, conversion: '64%', valorPromedio: '$41,800' }
-              ].map((vendedor, index) => (
-                <tr key={index} className="hover:bg-gray-50 transition-colors duration-200">
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Users size={16} className="text-blue-600" />
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">{vendedor.nombre}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">{vendedor.ventas}</div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">{vendedor.oportunidades}</div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-green-600">{vendedor.conversion}</div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900 flex items-center gap-1">
-                      <DollarSign size={14} className="text-gray-400" />
-                      {vendedor.valorPromedio}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

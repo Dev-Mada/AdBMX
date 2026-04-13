@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Building2, User, Mail, Lock, ArrowLeft } from 'lucide-react';
 import api from '../lib/api';
 
 const Register = () => {
@@ -10,12 +9,9 @@ const Register = () => {
     email: '',
     password: '',
     confirmarPassword: '',
-    rol: 'usuario',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,12 +27,12 @@ const Register = () => {
     }
 
     if (formData.password !== formData.confirmarPassword) {
-      setError('Las contraseñas no coinciden');
+      setError('Las contrasenas no coinciden');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+      setError('La contrasena debe tener al menos 6 caracteres');
       return;
     }
 
@@ -47,7 +43,6 @@ const Register = () => {
         nombre: formData.nombre,
         email: formData.email,
         password: formData.password,
-        rol: formData.rol,
       });
 
       if (response.data.success) {
@@ -62,196 +57,156 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-indigo-600 via-blue-700 to-violet-800 p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-indigo-300 rounded-full blur-3xl"></div>
-        </div>
-        
-        <div className="relative z-10">
-          <Link to="/login" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4">
-            <ArrowLeft size={20} />
-            <span>Volver al login</span>
+      <div className="hidden lg:flex lg:w-[55%] bg-[#111827] p-16 flex-col justify-between relative">
+        <div>
+          <Link to="/login" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-16">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Volver</span>
           </Link>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">ADBMX</span>
-          </div>
-          <p className="text-blue-100 text-lg">Business Management eXpress</p>
-        </div>
-
-        <div className="relative z-10 space-y-8">
-          <h1 className="text-4xl font-bold text-white leading-tight">
-            Unete a miles de empresas que ya gestionan sus ventas con nosotros
-          </h1>
-          <p className="text-blue-100 text-lg">
-            Crea tu cuenta gratuita y comienza a gestionar clientes, oportunidades y tareas en minutos.
-          </p>
           
-          <div className="space-y-4">
-            {[
-              'Gestion de clientes ilimitada',
-              'Pipeline de ventas visual',
-              'Tareas y recordatorios',
-              'Dashboard con metricas',
-            ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-3 text-white">
-                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span>{feature}</span>
-              </div>
-            ))}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-[#111827] font-bold text-lg">A</span>
+            </div>
+            <span className="text-2xl font-semibold text-white tracking-tight">ADBMX</span>
+          </div>
+          
+          <div className="max-w-lg">
+            <h1 className="text-4xl font-semibold text-white leading-[1.2] mb-6 tracking-tight">
+              Unete a equipos comerciales que ya confian en nosotros
+            </h1>
+            <p className="text-lg text-gray-400 leading-relaxed">
+              Crea tu cuenta y comienza a gestionar clientes, oportunidades y tareas en minutos.
+            </p>
           </div>
         </div>
 
-        <div className="relative z-10 text-blue-200 text-sm">
-          Plan gratuito disponible · Sin tarjeta de credito
+        <div className="space-y-6">
+          {[
+            { title: 'Gestion ilimitada', desc: 'Clientes, oportunidades y tareas sin limites' },
+            { title: 'Pipeline visual', desc: 'Seguimiento claro de tu embudo de ventas' },
+            { title: 'Metrics en tiempo real', desc: 'Dashboard con datos actualizados al instante' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center mt-0.5">
+                <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white font-medium mb-0.5">{item.title}</p>
+                <p className="text-gray-500 text-sm">{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
+
+        <p className="text-gray-600 text-sm">
+          Plan gratuito disponible
+        </p>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-slate-50">
+      <div className="w-full lg:w-[45%] flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Building2 className="w-6 h-6 text-white" />
+          <div className="lg:hidden flex items-center gap-3 mb-12">
+            <div className="w-10 h-10 bg-[#111827] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">A</span>
             </div>
-            <span className="text-xl font-bold text-slate-900">ADBMX</span>
+            <span className="text-xl font-semibold text-gray-900">ADBMX</span>
           </div>
 
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Crear cuenta</h2>
-            <p className="text-slate-600 mt-2">Completa el formulario para registrarte</p>
+          <div className="mb-10">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Crear cuenta</h2>
+            <p className="text-gray-500">Completa el formulario para registrarte</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
             
             <div className="space-y-4">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
                   Nombre completo
                 </label>
-                <div className="relative">
-                  <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    required
-                    value={formData.nombre}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-3 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 placeholder-slate-400"
-                    placeholder="Tu nombre"
-                  />
-                </div>
+                <input
+                  id="nombre"
+                  name="nombre"
+                  type="text"
+                  required
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder-gray-400"
+                  placeholder="Tu nombre"
+                />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Correo electronico
                 </label>
-                <div className="relative">
-                  <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-3 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 placeholder-slate-400"
-                    placeholder="tu@email.com"
-                  />
-                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder-gray-400"
+                  placeholder="tu@empresa.com"
+                />
               </div>
               
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Contrasena
                 </label>
-                <div className="relative">
-                  <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-12 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 placeholder-slate-400"
-                    placeholder="Minimo 6 caracteres"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder-gray-400"
+                  placeholder="Minimo 6 caracteres"
+                />
               </div>
 
               <div>
-                <label htmlFor="confirmarPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="confirmarPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirmar contrasena
                 </label>
-                <div className="relative">
-                  <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    id="confirmarPassword"
-                    name="confirmarPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={formData.confirmarPassword}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-12 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-900 placeholder-slate-400"
-                    placeholder="Repite la contrasena"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
+                <input
+                  id="confirmarPassword"
+                  name="confirmarPassword"
+                  type="password"
+                  required
+                  value={formData.confirmarPassword}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-gray-900 placeholder-gray-400"
+                  placeholder="Repite la contrasena"
+                />
               </div>
             </div>
 
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25"
+              className="w-full bg-[#111827] text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creando cuenta...
-                </span>
-              ) : (
-                'Crear cuenta'
-              )}
+              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-600">
+          <p className="mt-8 text-center text-sm text-gray-500">
             Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/login" className="text-gray-900 font-medium hover:underline">
               Inicia sesion
             </Link>
           </p>
