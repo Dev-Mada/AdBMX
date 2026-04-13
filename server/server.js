@@ -119,12 +119,73 @@ app.get('/', (req, res) => {
 
 // 🔐 RUTAS DE AUTENTICACIÓN
 
+// Registro de usuarios
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { nombre, email, password, rol } = req.body;
+
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Todos los campos son requeridos' 
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'La contrasena debe tener al menos 6 caracteres' 
+      });
+    }
+
+    const usuarioExistente = await Usuario.findOne({ where: { email } });
+    if (usuarioExistente) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'El email ya esta registrado' 
+      });
+    }
+
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.default.hash(password, 10);
+    
+    const usuario = await Usuario.create({
+      nombre,
+      email,
+      password: hashedPassword,
+      rol: rol || 'usuario',
+      activo: true
+    });
+
+    const { password: _, ...usuarioSinPassword } = usuario.toJSON();
+
+    res.status(201).json({
+      success: true,
+      message: 'Usuario registrado exitosamente',
+      user: usuarioSinPassword
+    });
+
+  } catch (error) {
+    if (isDatabaseConnectionError(error)) {
+      return res.status(503).json({
+        success: false,
+        error: 'Base de datos no disponible'
+      });
+    }
+
+    console.error('Error en registro:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
 // Login
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validar campos requeridos
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -132,10 +193,7 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Buscar usuario por email
-    const usuario = await Usuario.findOne({ 
-      where: { email } 
-    });
+    const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
       return res.status(401).json({ 
@@ -144,7 +202,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Verificar si el usuario está activo
     if (!usuario.activo) {
       return res.status(401).json({ 
         success: false,
@@ -152,7 +209,6 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Verificar contraseña
     const bcrypt = await import('bcryptjs');
     const passwordValido = await bcrypt.default.compare(password, usuario.password);
 
@@ -163,10 +219,8 @@ app.post('/api/auth/login', async (req, res) => {
       });
     }
 
-    // Excluir password de la respuesta
     const { password: _, ...usuarioSinPassword } = usuario.toJSON();
 
-    // Login exitoso
     const token = jwt.sign(
       { id: usuario.id, email: usuario.email, rol: usuario.rol },
       JWT_SECRET,
@@ -259,18 +313,18 @@ app.get('/api/clientes', async (req, res) => {
     const clientes = await Cliente.findAll({
       include: [Oportunidad, Contacto, Tarea]
     });
-    res.json(clientes);
+    res.json({ success: true, clientes });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/clientes', async (req, res) => {
   try {
     const cliente = await Cliente.create(req.body);
-    res.status(201).json(cliente);
+    res.status(201).json({ success: true, cliente });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -279,34 +333,34 @@ app.get('/api/clientes/:id', async (req, res) => {
     const cliente = await Cliente.findByPk(req.params.id, {
       include: [Oportunidad, Contacto, Tarea]
     });
-    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
-    res.json(cliente);
+    if (!cliente) return res.status(404).json({ success: false, error: 'Cliente no encontrado' });
+    res.json({ success: true, cliente });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.put('/api/clientes/:id', async (req, res) => {
   try {
     const cliente = await Cliente.findByPk(req.params.id);
-    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+    if (!cliente) return res.status(404).json({ success: false, error: 'Cliente no encontrado' });
     
     await cliente.update(req.body);
-    res.json(cliente);
+    res.json({ success: true, cliente });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.delete('/api/clientes/:id', async (req, res) => {
   try {
     const cliente = await Cliente.findByPk(req.params.id);
-    if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+    if (!cliente) return res.status(404).json({ success: false, error: 'Cliente no encontrado' });
     
     await cliente.destroy();
-    res.json({ message: 'Cliente eliminado correctamente' });
+    res.json({ success: true, message: 'Cliente eliminado correctamente' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -316,30 +370,42 @@ app.get('/api/oportunidades', async (req, res) => {
     const oportunidades = await Oportunidad.findAll({
       include: [Cliente]
     });
-    res.json(oportunidades);
+    res.json({ success: true, oportunidades });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/oportunidades', async (req, res) => {
   try {
     const oportunidad = await Oportunidad.create(req.body);
-    res.status(201).json(oportunidad);
+    res.status(201).json({ success: true, oportunidad });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.put('/api/oportunidades/:id', async (req, res) => {
   try {
     const oportunidad = await Oportunidad.findByPk(req.params.id);
-    if (!oportunidad) return res.status(404).json({ error: 'Oportunidad no encontrada' });
+    if (!oportunidad) return res.status(404).json({ success: false, error: 'Oportunidad no encontrada' });
     
     await oportunidad.update(req.body);
-    res.json(oportunidad);
+    res.json({ success: true, oportunidad });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/oportunidades/:id', async (req, res) => {
+  try {
+    const oportunidad = await Oportunidad.findByPk(req.params.id);
+    if (!oportunidad) return res.status(404).json({ success: false, error: 'Oportunidad no encontrada' });
+    
+    await oportunidad.destroy();
+    res.json({ success: true, message: 'Oportunidad eliminada correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -349,30 +415,42 @@ app.get('/api/tareas', async (req, res) => {
     const tareas = await Tarea.findAll({
       include: [Cliente, Usuario]
     });
-    res.json(tareas);
+    res.json({ success: true, tareas });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/tareas', async (req, res) => {
   try {
     const tarea = await Tarea.create(req.body);
-    res.status(201).json(tarea);
+    res.status(201).json({ success: true, tarea });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.put('/api/tareas/:id', async (req, res) => {
   try {
     const tarea = await Tarea.findByPk(req.params.id);
-    if (!tarea) return res.status(404).json({ error: 'Tarea no encontrada' });
+    if (!tarea) return res.status(404).json({ success: false, error: 'Tarea no encontrada' });
     
     await tarea.update(req.body);
-    res.json(tarea);
+    res.json({ success: true, tarea });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/tareas/:id', async (req, res) => {
+  try {
+    const tarea = await Tarea.findByPk(req.params.id);
+    if (!tarea) return res.status(404).json({ success: false, error: 'Tarea no encontrada' });
+    
+    await tarea.destroy();
+    res.json({ success: true, message: 'Tarea eliminada correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -382,18 +460,30 @@ app.get('/api/contactos', async (req, res) => {
     const contactos = await Contacto.findAll({
       include: [Cliente]
     });
-    res.json(contactos);
+    res.json({ success: true, contactos });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/contactos', async (req, res) => {
   try {
     const contacto = await Contacto.create(req.body);
-    res.status(201).json(contacto);
+    res.status(201).json({ success: true, contacto });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/contactos/:id', async (req, res) => {
+  try {
+    const contacto = await Contacto.findByPk(req.params.id);
+    if (!contacto) return res.status(404).json({ success: false, error: 'Contacto no encontrado' });
+    
+    await contacto.destroy();
+    res.json({ success: true, message: 'Contacto eliminado correctamente' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
