@@ -123,11 +123,6 @@ app.get('/test', (req, res) => {
   res.json({ message: 'test ok' });
 });
 
-// 📍 Endpoint para poblar datos de prueba
-app.post('/seed', async (req, res) => {
-  try {
-    console.log('SEED START');
-
 // 🔐 RUTAS DE AUTENTICACIÓN
 
 // Registro de usuarios
@@ -136,30 +131,30 @@ app.post('/api/auth/register', async (req, res) => {
     const { nombre, email, password, rol } = req.body;
 
     if (!nombre || !email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Todos los campos son requeridos' 
+        error: 'Todos los campos son requeridos'
       });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'La contrasena debe tener al menos 6 caracteres' 
+        error: 'La contrasena debe tener al menos 6 caracteres'
       });
     }
 
     const usuarioExistente = await Usuario.findOne({ where: { email } });
     if (usuarioExistente) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'El email ya esta registrado' 
+        error: 'El email ya esta registrado'
       });
     }
 
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.default.hash(password, 10);
-    
+
     const usuario = await Usuario.create({
       nombre,
       email,
@@ -198,25 +193,25 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email y contraseña son requeridos' 
+        error: 'Email y contraseña son requeridos'
       });
     }
 
     const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        error: 'Credenciales inválidas' 
+        error: 'Credenciales inválidas'
       });
     }
 
     if (!usuario.activo) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        error: 'Usuario desactivado' 
+        error: 'Usuario desactivado'
       });
     }
 
@@ -224,9 +219,9 @@ app.post('/api/auth/login', async (req, res) => {
     const passwordValido = await bcrypt.default.compare(password, usuario.password);
 
     if (!passwordValido) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        error: 'Credenciales inválidas' 
+        error: 'Credenciales inválidas'
       });
     }
 
@@ -266,24 +261,24 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/seed', async (req, res) => {
   try {
     const t = await sequelize.transaction();
-    
+
     try {
       await Tarea.destroy({ where: {}, transaction: t, force: true });
       await Oportunidad.destroy({ where: {}, transaction: t, force: true });
       await Contacto.destroy({ where: {}, transaction: t, force: true });
       await Cliente.destroy({ where: {}, transaction: t, force: true });
       await Usuario.destroy({ where: { email: { [Op.ne]: 'admin@adbmx.com' } }, transaction: t, force: true });
-      
+
       await t.commit();
     } catch (innerError) {
       await t.rollback();
       console.error('Error en destroy:', innerError);
       throw innerError;
     }
-    
+
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.default.hash('demo123', 10);
-    
+
     await Usuario.bulkCreate([
       { nombre: 'Administrador', email: 'admin@adbmx.com', password: hashedPassword, rol: 'admin', activo: true },
       { nombre: 'Carlos Martinez', email: 'carlos@adbmx.com', password: hashedPassword, rol: 'vendedor', activo: true },
@@ -295,7 +290,7 @@ app.post('/seed', async (req, res) => {
       { nombre: 'Javier Torres', email: 'javier@adbmx.com', password: hashedPassword, rol: 'vendedor', activo: true },
       { nombre: 'Maria Perez', email: 'maria@adbmx.com', password: hashedPassword, rol: 'usuario', activo: true },
       { nombre: 'Roberto Diaz', email: 'roberto@adbmx.com', password: hashedPassword, rol: 'vendedor', activo: true },
-    ]);
+    ], { updateOnDuplicate: ['nombre', 'password', 'rol', 'activo'] });
 
     const clientesData = [
       { nombre: 'Ana Rodriguez', email: 'ana.rodriguez@techcorp.es', telefono: '+34 612 345 678', empresa: 'TechCorp Solutions', industria: 'Tecnologia', direccion: 'Calle Gran Via 28, Madrid', estado: 'cliente', valorPotencial: 85000, fuente: 'referencia', notas: 'Cliente enterprise - contrato activo' },
@@ -335,10 +330,10 @@ app.post('/seed', async (req, res) => {
     const clientes = await Cliente.bulkCreate(clientesData);
 
     const hoy = new Date();
-    
+
     const usuarios = await Usuario.findAll();
     const getRandomUsuario = () => usuarios[Math.floor(Math.random() * usuarios.length)]?.id || 1;
-    
+
     const getRandomDate = (minDays, maxDays) => new Date(hoy.getTime() + (Math.random() * (maxDays - minDays) + minDays) * 24 * 60 * 60 * 1000);
     const getPastDate = (minDays, maxDays) => new Date(hoy.getTime() - (Math.random() * (maxDays - minDays) + minDays) * 24 * 60 * 60 * 1000);
 
@@ -382,7 +377,7 @@ app.post('/seed', async (req, res) => {
       const tipos = ['llamada', 'email', 'reunion', 'seguimiento', 'otro'];
       const prioridades = ['baja', 'media', 'alta', 'urgente'];
       const estados = ['pendiente', 'en_progreso', 'completada'];
-      
+
       const textos = [
         { titulo: 'Llamada de seguimiento', desc: 'Confirmar disponibilidad para reunion' },
         { titulo: 'Enviar propuesta comercial', desc: 'Adjuntar dokumentacion y pricing' },
@@ -405,7 +400,7 @@ app.post('/seed', async (req, res) => {
         const texto = textos[Math.floor(Math.random() * textos.length)];
         const clienteRand = clientes[Math.floor(Math.random() * clientes.length)];
         const tieneCliente = Math.random() > 0.3;
-        
+
         tareas.push({
           titulo: `${texto.titulo} ${clienteRand.empresa.split(' ')[0]}`,
           descripcion: texto.desc,
@@ -427,7 +422,7 @@ app.post('/seed', async (req, res) => {
       const contactos = [];
       const puestos = ['CEO', 'CTO', 'Director Comercial', 'Gerente de Ventas', 'Responsable IT', 'Director Marketing', 'COO', 'CFO', 'Director RRHH', 'Jefe de Proyectos', 'Responsable Compras'];
       const departamentos = ['Direccion', 'Ventas', 'Marketing', 'Tecnologia', 'Operaciones', 'Finanzas', 'RRHH', 'Compras', 'Produccion'];
-      
+
       clientes.forEach(cliente => {
         const numContactos = Math.floor(Math.random() * 3) + 1;
         for (let i = 0; i < numContactos; i++) {
@@ -465,9 +460,9 @@ app.get('/api/auth/verify', async (req, res) => {
     });
 
     if (!usuario) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        error: 'Usuario no encontrado' 
+        error: 'Usuario no encontrado'
       });
     }
 
@@ -475,9 +470,9 @@ app.get('/api/auth/verify', async (req, res) => {
 
   } catch (error) {
     console.error('Error verificando token:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Error interno del servidor' 
+      error: 'Error interno del servidor'
     });
   }
 });
@@ -498,12 +493,12 @@ app.post('/api/usuarios', async (req, res) => {
   try {
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.default.hash(req.body.password, 10);
-    
+
     const usuario = await Usuario.create({
       ...req.body,
       password: hashedPassword
     });
-    
+
     const { password, ...usuarioSinPassword } = usuario.toJSON();
     res.status(201).json(usuarioSinPassword);
   } catch (error) {
@@ -548,7 +543,7 @@ app.put('/api/clientes/:id', async (req, res) => {
   try {
     const cliente = await Cliente.findByPk(req.params.id);
     if (!cliente) return res.status(404).json({ success: false, error: 'Cliente no encontrado' });
-    
+
     await cliente.update(req.body);
     res.json({ success: true, cliente });
   } catch (error) {
@@ -560,7 +555,7 @@ app.delete('/api/clientes/:id', async (req, res) => {
   try {
     const cliente = await Cliente.findByPk(req.params.id);
     if (!cliente) return res.status(404).json({ success: false, error: 'Cliente no encontrado' });
-    
+
     await cliente.destroy();
     res.json({ success: true, message: 'Cliente eliminado correctamente' });
   } catch (error) {
@@ -593,7 +588,7 @@ app.put('/api/oportunidades/:id', async (req, res) => {
   try {
     const oportunidad = await Oportunidad.findByPk(req.params.id);
     if (!oportunidad) return res.status(404).json({ success: false, error: 'Oportunidad no encontrada' });
-    
+
     await oportunidad.update(req.body);
     res.json({ success: true, oportunidad });
   } catch (error) {
@@ -605,7 +600,7 @@ app.delete('/api/oportunidades/:id', async (req, res) => {
   try {
     const oportunidad = await Oportunidad.findByPk(req.params.id);
     if (!oportunidad) return res.status(404).json({ success: false, error: 'Oportunidad no encontrada' });
-    
+
     await oportunidad.destroy();
     res.json({ success: true, message: 'Oportunidad eliminada correctamente' });
   } catch (error) {
@@ -638,7 +633,7 @@ app.put('/api/tareas/:id', async (req, res) => {
   try {
     const tarea = await Tarea.findByPk(req.params.id);
     if (!tarea) return res.status(404).json({ success: false, error: 'Tarea no encontrada' });
-    
+
     await tarea.update(req.body);
     res.json({ success: true, tarea });
   } catch (error) {
@@ -650,7 +645,7 @@ app.delete('/api/tareas/:id', async (req, res) => {
   try {
     const tarea = await Tarea.findByPk(req.params.id);
     if (!tarea) return res.status(404).json({ success: false, error: 'Tarea no encontrada' });
-    
+
     await tarea.destroy();
     res.json({ success: true, message: 'Tarea eliminada correctamente' });
   } catch (error) {
@@ -683,7 +678,7 @@ app.delete('/api/contactos/:id', async (req, res) => {
   try {
     const contacto = await Contacto.findByPk(req.params.id);
     if (!contacto) return res.status(404).json({ success: false, error: 'Contacto no encontrado' });
-    
+
     await contacto.destroy();
     res.json({ success: true, message: 'Contacto eliminado correctamente' });
   } catch (error) {

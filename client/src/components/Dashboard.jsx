@@ -58,7 +58,7 @@ const Dashboard = () => {
         totalClientes: clientes.length,
         tareasPendientes: tareas.filter(t => t.estado === 'pendiente' || t.estado === 'en_progreso').length,
         oportunidadesActivas: oportunidades.filter(o => !['ganado', 'perdido'].includes(o.etapa)).length,
-        ventasMes: oportunidades.filter(o => o.etapa === 'ganado').reduce((sum, o) => sum + (o.valor || 0), 0),
+        ventasMes: oportunidades.filter(o => o.etapa === 'ganado').reduce((sum, o) => sum + (parseFloat(o.valor) || 0), 0),
         tasaConversion: oportunidades.length > 0 
           ? Math.round((oportunidades.filter(o => o.etapa === 'ganado').length / oportunidades.length) * 100) 
           : 0,
@@ -85,7 +85,7 @@ const Dashboard = () => {
       const mesesData = Array(12).fill(0);
       oportunidades.filter(o => o.etapa === 'ganado').forEach(o => {
         const mes = new Date(o.fechaCierre || o.updatedAt).getMonth();
-        if (mes >= 0 && mes < 12) mesesData[mes] += o.valor || 0;
+        if (mes >= 0 && mes < 12) mesesData[mes] += parseFloat(o.valor) || 0;
       });
       setVentasData(mesesData);
 

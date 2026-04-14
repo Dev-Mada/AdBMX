@@ -6,18 +6,29 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('adbmx_token');
-    const savedUser = localStorage.getItem('adbmx_user');
-    
-    if (token && savedUser) {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('adbmx_token');
+      const savedUser = localStorage.getItem('adbmx_user');
+      
+      if (!token || !savedUser) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        setUser(JSON.parse(savedUser));
-      } catch {
+        const response = await api.get('/auth/verify');
+        if (response.data) {
+          setUser(response.data);
+        }
+      } catch (error) {
         localStorage.removeItem('adbmx_token');
         localStorage.removeItem('adbmx_user');
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    verifyToken();
   }, []);
 
   const login = useCallback(async (email, password) => {

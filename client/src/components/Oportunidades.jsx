@@ -91,7 +91,7 @@ const Oportunidades = () => {
   };
 
   const filtradas = filtroEtapa === 'todas' ? oportunidades : oportunidades.filter(o => o.etapa === filtroEtapa);
-  const valorTotal = oportunidades.filter(o => !['ganado', 'perdido'].includes(o.etapa)).reduce((s, o) => s + (o.valor || 0), 0);
+  const valorTotal = oportunidades.filter(o => !['ganado', 'perdido'].includes(o.etapa)).reduce((s, o) => s + (parseFloat(o.valor) || 0), 0);
 
   return (
     <div className="p-6 lg:p-8">
@@ -188,7 +188,7 @@ const Oportunidades = () => {
                   <tr key={o.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4"><p className="text-sm font-medium text-gray-900">{o.titulo}</p><p className="text-xs text-gray-500 truncate max-w-xs hidden sm:block">{o.descripcion || 'Sin descripcion'}</p></td>
                     <td className="px-4 py-4 hidden sm:table-cell text-sm text-gray-900">{o.cliente?.nombre || '-'}</td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">${o.valor?.toLocaleString() || '0'}</td>
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900">${parseFloat(o.valor)?.toLocaleString() || '0'}</td>
                     <td className="px-4 py-4"><span className={`px-2.5 py-1 text-xs font-medium rounded-full ${etapa?.color}`}>{etapa?.nombre}</span></td>
                     <td className="px-4 py-4 hidden md:table-cell">
                       <div className="flex items-center gap-2"><div className="w-16 bg-gray-100 rounded-full h-1.5"><div className="bg-gray-900 h-1.5 rounded-full" style={{width: `${o.probabilidad}%`}}></div></div><span className="text-xs text-gray-500">{o.probabilidad}%</span></div>

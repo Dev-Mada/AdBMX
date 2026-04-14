@@ -35,9 +35,9 @@ const Reportes = () => {
     clientesTotal: 0,
     oportunidadesActivas: 0,
   })
-  const [ventasMensuales, setVentasMensuales] = useState([])
-  const [fuentesData, setFuentesData] = useState([])
-  const [conversionData, setConversionData] = useState([])
+  const [ventasMensuales, setVentasMensuales] = useState(Array(12).fill(0))
+  const [fuentesData, setFuentesData] = useState({ labels: [], values: [] })
+  const [conversionData, setConversionData] = useState({ labels: [], data: [] })
   const [actividadData, setActividadData] = useState([])
   const toast = useToast()
 
@@ -52,16 +52,25 @@ const Reportes = () => {
         api.get('/tareas')
       ])
 
+      console.log('Oportunidades response:', oportunidadesRes.data)
+      
       const clientes = clientesRes.data.clientes || []
-      const oportunidades = oportunidadesRes.data.opportunidades || []
+      const oportunidades = oportunidadesRes.data.oportunidades || []
       const tareas = tareasRes.data.tareas || []
+
+      console.log('Oportunidades procesadas:', oportunidades)
+      console.log('Oportunidades ganadas:', oportunidades.filter(o => o.etapa === 'ganado'))
 
       const ganadas = oportunidades.filter(o => o.etapa === 'ganado')
       const activas = oportunidades.filter(o => !['ganado', 'perdido'].includes(o.etapa))
       const totalOportunidades = oportunidades.length
 
-      const ingresosTotales = ganadas.reduce((sum, o) => sum + (o.valor || 0), 0)
+      console.log('Ingresos ganadas:', ganadas.map(o => ({ etapa: o.etapa, valor: o.valor })))
+
+      const ingresosTotales = ganadas.reduce((sum, o) => sum + (parseFloat(o.valor) || 0), 0)
       const conversion = totalOportunidades > 0 ? Math.round((ganadas.length / totalOportunidades) * 100) : 0
+
+      console.log('Ingresos totales calculados:', ingresosTotales)
 
       setMetricas({
         ingresosTotales,
@@ -75,7 +84,7 @@ const Reportes = () => {
       ganadas.forEach(o => {
         const fecha = new Date(o.fechaCierre || o.updatedAt)
         if (fecha.getFullYear() === anioActual) {
-          meses[fecha.getMonth()] += o.valor || 0
+          meses[fecha.getMonth()] += parseFloat(o.valor) || 0
         }
       })
       setVentasMensuales(meses)
