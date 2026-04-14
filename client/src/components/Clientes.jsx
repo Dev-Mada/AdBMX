@@ -4,6 +4,11 @@ import Modal from './ui/Modal';
 import EmptyState from './ui/EmptyState';
 import { TableSkeleton } from './ui/Skeleton';
 import { useToast } from './ui/Toast';
+import { 
+  Search, Plus, Filter, MoreVertical, Mail, Phone, 
+  Building, MapPin, Edit2, Trash2, ChevronDown,
+  Users, X, Check
+} from 'lucide-react';
 
 const Clientes = () => {
   const [clientes, setClientes] = useState([]);
@@ -94,146 +99,278 @@ const Clientes = () => {
   });
 
   const getEstadoBadge = (estado) => {
-    const map = { prospecto: 'bg-blue-50 text-blue-700', cliente: 'bg-green-50 text-green-700', inactivo: 'bg-gray-100 text-gray-600', perdido: 'bg-red-50 text-red-700' };
+    const map = { 
+      prospecto: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+      cliente: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400',
+      inactivo: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400',
+      perdido: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+    };
     return map[estado] || map.prospecto;
   };
 
   const getEstadoTexto = (estado) => ({ prospecto: 'Prospecto', cliente: 'Cliente', inactivo: 'Inactivo', perdido: 'Perdido' })[estado] || estado;
 
+  const getIndustriaIcon = (industria) => {
+    return <Building className="w-4 h-4" />;
+  };
+
   return (
-    <div className="p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
-          <p className="text-gray-500 mt-1">{clientes.length} clientes en total</p>
+          <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Clientes</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">{clientes.length} clientes en total</p>
         </div>
-        <button onClick={() => setMostrarForm(true)} className="bg-gray-900 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors text-sm">
-          + Agregar cliente
+        <button 
+          onClick={() => { limpiarForm(); setMostrarForm(true); }}
+          className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-600/25 transition-all"
+        >
+          <Plus className="w-5 h-5" />
+          Agregar cliente
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input type="text" placeholder="Buscar por nombre, email o empresa..." value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
-        <select value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm">
-          <option value="todos">Todos</option>
-          <option value="prospecto">Prospecto</option>
-          <option value="cliente">Cliente</option>
-          <option value="inactivo">Inactivo</option>
-          <option value="perdido">Perdido</option>
-        </select>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)]">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre, email o empresa..." 
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="w-full pl-12 pr-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          />
+        </div>
+        <div className="relative">
+          <select 
+            value={estadoFiltro} 
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+            className="appearance-none pl-4 pr-10 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="prospecto">Prospecto</option>
+            <option value="cliente">Cliente</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="perdido">Perdido</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)] pointer-events-none" />
+        </div>
       </div>
 
-      <Modal isOpen={mostrarForm} onClose={limpiarForm} title={clienteEditando ? 'Editar cliente' : 'Nuevo cliente'} size="md">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Table */}
+      <div className="bg-[var(--color-bg-card)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+        {loading && clientes.length === 0 ? (
+          <TableSkeleton rows={5} cols={6} />
+        ) : clientesFiltrados.length === 0 ? (
+          <EmptyState 
+            icon={Users} 
+            title="No hay clientes" 
+            description="Agrega tu primer cliente para comenzar" 
+            actionLabel="Agregar cliente" 
+            onAction={() => setMostrarForm(true)} 
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                <tr>
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4">Cliente</th>
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4 hidden md:table-cell">Contacto</th>
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4 hidden lg:table-cell">Empresa</th>
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4">Estado</th>
+                  <th className="text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4 hidden xl:table-cell">Valor</th>
+                  <th className="text-right text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] px-6 py-4">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-border-light)]">
+                {clientesFiltrados.map((c, i) => (
+                  <tr key={c.id} className="hover:bg-[var(--color-bg-secondary)] transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-violet-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm">
+                          {c.nombre?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[var(--color-text-primary)]">{c.nombre}</p>
+                          <p className="text-sm text-[var(--color-text-muted)]">{c.industria || 'Sin industria'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      <div className="space-y-1">
+                        <p className="text-sm text-[var(--color-text-primary)]">{c.email}</p>
+                        <p className="text-sm text-[var(--color-text-muted)]">{c.telefono || '-'}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 hidden lg:table-cell">
+                      <p className="text-sm text-[var(--color-text-primary)]">{c.empresa || '-'}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${getEstadoBadge(c.estado)}`}>
+                        {getEstadoTexto(c.estado)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 hidden xl:table-cell">
+                      <p className="font-semibold text-[var(--color-text-primary)]">
+                        {c.valorPotencial ? `$${parseFloat(c.valorPotencial).toLocaleString()}` : '-'}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => editarCliente(c)} 
+                          className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => confirmarEliminar(c.id, c.nombre)} 
+                          className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Form */}
+      <Modal isOpen={mostrarForm} onClose={limpiarForm} title={clienteEditando ? 'Editar cliente' : 'Nuevo cliente'} size="lg">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre *</label>
-              <input type="text" required value={formData.nombre} onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Nombre *</label>
+              <input 
+                type="text" 
+                required 
+                value={formData.nombre} 
+                onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email *</label>
-              <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" />
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Email *</label>
+              <input 
+                type="email" 
+                required 
+                value={formData.email} 
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
             </div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Telefono</label>
-              <input type="tel" value={formData.telefono} onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Empresa</label>
-              <input type="text" value={formData.empresa} onChange={(e) => setFormData({...formData, empresa: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Industria</label>
-              <select value={formData.industria} onChange={(e) => setFormData({...formData, industria: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Teléfono</label>
+              <input 
+                type="tel" 
+                value={formData.telefono} 
+                onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Empresa</label>
+              <input 
+                type="text" 
+                value={formData.empresa} 
+                onChange={(e) => setFormData({...formData, empresa: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Industria</label>
+              <select 
+                value={formData.industria} 
+                onChange={(e) => setFormData({...formData, industria: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              >
                 <option value="">Seleccionar</option>
-                <option value="Tecnologia">Tecnologia</option>
+                <option value="Tecnologia">Tecnología</option>
                 <option value="Finanzas">Finanzas</option>
                 <option value="Salud">Salud</option>
                 <option value="Comercio">Comercio</option>
                 <option value="Otro">Otro</option>
-              </select></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Estado</label>
-              <select value={formData.estado} onChange={(e) => setFormData({...formData, estado: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Estado</label>
+              <select 
+                value={formData.estado} 
+                onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              >
                 <option value="prospecto">Prospecto</option>
                 <option value="cliente">Cliente</option>
                 <option value="inactivo">Inactivo</option>
                 <option value="perdido">Perdido</option>
-              </select></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Valor potencial</label>
-              <input type="number" value={formData.valorPotencial} onChange={(e) => setFormData({...formData, valorPotencial: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" /></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-1.5">Fuente</label>
-              <select value={formData.fuente} onChange={(e) => setFormData({...formData, fuente: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Valor potencial</label>
+              <input 
+                type="number" 
+                value={formData.valorPotencial} 
+                onChange={(e) => setFormData({...formData, valorPotencial: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Fuente</label>
+              <select 
+                value={formData.fuente} 
+                onChange={(e) => setFormData({...formData, fuente: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              >
                 <option value="">Seleccionar</option>
                 <option value="web">Sitio Web</option>
                 <option value="referencia">Referencia</option>
                 <option value="redes">Redes Sociales</option>
                 <option value="evento">Evento</option>
-              </select></div>
-            <div className="md:col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1.5">Direccion</label>
-              <input type="text" value={formData.direccion} onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" /></div>
-            <div className="md:col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1.5">Notas</label>
-              <textarea rows="2" value={formData.notas} onChange={(e) => setFormData({...formData, notas: e.target.value})}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" /></div>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Dirección</label>
+              <input 
+                type="text" 
+                value={formData.direccion} 
+                onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Notas</label>
+              <textarea 
+                rows={3} 
+                value={formData.notas} 
+                onChange={(e) => setFormData({...formData, notas: e.target.value})}
+                className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+              />
+            </div>
           </div>
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
-            <button type="submit" disabled={loading}
-              className="bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 text-sm flex-1">
-              {loading ? 'Guardando...' : clienteEditando ? 'Actualizar' : 'Crear cliente'}
+          <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-600/25 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Guardando...' : clienteEditando ? 'Actualizar cliente' : 'Crear cliente'}
             </button>
-            <button type="button" onClick={limpiarForm} className="bg-gray-100 text-gray-700 px-6 py-2.5 rounded-lg text-sm">Cancelar</button>
+            <button 
+              type="button" 
+              onClick={limpiarForm}
+              className="px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-xl font-semibold hover:bg-[var(--color-bg-secondary)] transition-colors"
+            >
+              Cancelar
+            </button>
           </div>
         </form>
       </Modal>
-
-      {loading && clientes.length === 0 ? <TableSkeleton rows={5} cols={5} /> :
-       clientesFiltrados.length === 0 ? <EmptyState icon="users" title="No hay clientes" description="Agrega tu primer cliente para comenzar" actionLabel="Agregar cliente" onAction={() => setMostrarForm(true)} /> :
-       (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Contacto</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Empresa</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden xl:table-cell">Valor</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {clientesFiltrados.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                        {c.nombre?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
-                      <div><p className="text-sm font-medium text-gray-900">{c.nombre}</p><p className="text-xs text-gray-500">{c.industria || 'Sin industria'}</p></div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 hidden md:table-cell"><p className="text-sm text-gray-900">{c.email}</p><p className="text-xs text-gray-500">{c.telefono || '-'}</p></td>
-                  <td className="px-4 py-4 hidden lg:table-cell text-sm text-gray-900">{c.empresa || '-'}</td>
-                  <td className="px-4 py-4"><span className={`px-2.5 py-1 text-xs font-medium rounded-full ${getEstadoBadge(c.estado)}`}>{getEstadoTexto(c.estado)}</span></td>
-                  <td className="px-4 py-4 hidden xl:table-cell text-sm font-medium text-gray-900">{c.valorPotencial ? `$${parseFloat(c.valorPotencial).toLocaleString()}` : '-'}</td>
-                  <td className="px-4 py-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => editarCliente(c)} className="text-gray-500 hover:text-gray-900 text-sm px-2 py-1 hover:bg-gray-100 rounded">Editar</button>
-                      <button onClick={() => confirmarEliminar(c.id, c.nombre)} className="text-red-600 hover:text-red-700 text-sm px-2 py-1 hover:bg-red-50 rounded">Eliminar</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 };

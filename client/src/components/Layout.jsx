@@ -1,22 +1,38 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, Users, Briefcase, CheckSquare, Phone, 
+  BarChart3, Settings, LogOut, Menu, X, ChevronDown,
+  Bell, Search, Moon, Sun, Plus, Check, XCircle, Clock, AlertCircle
+} from 'lucide-react';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('adbmx_darkMode') === 'true';
+  });
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([
+    { id: 1, tipo: 'tarea', titulo: 'Tarea pendiente', descripcion: 'Llamada de seguimiento con TechCorp', tiempo: new Date(Date.now() - 3600000), leida: false },
+    { id: 2, tipo: 'oportunidad', titulo: 'Nueva oportunidad', descripcion: 'CyberSecure IT avanzó a negociación', tiempo: new Date(Date.now() - 7200000), leida: false },
+    { id: 3, tipo: 'cliente', titulo: 'Cliente nuevo', descripcion: 'Global Finance renovó contrato', tiempo: new Date(Date.now() - 86400000), leida: true },
+  ]);
   const location = useLocation();
   const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: 'dashboard' },
-    { path: '/clientes', label: 'Clientes', icon: 'users' },
-    { path: '/oportunidades', label: 'Oportunidades', icon: 'briefcase' },
-    { path: '/tareas', label: 'Tareas', icon: 'check' },
-    { path: '/contactos', label: 'Contactos', icon: 'phone' },
-    { path: '/reportes', label: 'Reportes', icon: 'chart' },
-    { path: '/configuracion', label: 'Configuracion', icon: 'settings' },
+    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/clientes', label: 'Clientes', icon: Users },
+    { path: '/oportunidades', label: 'Oportunidades', icon: Briefcase },
+    { path: '/tareas', label: 'Tareas', icon: CheckSquare },
+    { path: '/contactos', label: 'Contactos', icon: Phone },
+    { path: '/reportes', label: 'Reportes', icon: BarChart3 },
+    { path: '/configuracion', label: 'Configuración', icon: Settings },
   ];
 
   useEffect(() => {
@@ -35,164 +51,282 @@ const Layout = ({ children }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('adbmx_darkMode', darkMode);
+  }, [darkMode]);
 
-  const icons = {
-    dashboard: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-      </svg>
-    ),
-    users: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ),
-    briefcase: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    check: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      </svg>
-    ),
-    phone: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-      </svg>
-    ),
-    chart: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    settings: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    menu: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    ),
-    logout: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
-    ),
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setUserMenuOpen(false);
+    setNotificationsOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuOpen && !e.target.closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
+      if (notificationsOpen && !e.target.closest('.notifications-menu')) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [userMenuOpen, notificationsOpen]);
+
+  const getInitials = (name) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {isMobile && sidebarOpen && (
+    <div className="min-h-screen bg-[var(--color-bg-secondary)]">
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-20"
-          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      <div className={`
-        fixed lg:static inset-y-0 left-0 z-30
-        bg-gray-900 transition-all duration-200 ease-in-out
-        ${sidebarOpen ? 'w-64' : 'w-0 lg:w-16'} 
-        flex flex-col overflow-hidden
+      {/* Sidebar */}
+      <aside className={`
+        fixed top-0 left-0 z-50 h-full
+        bg-[var(--color-sidebar)] transition-all duration-300 ease-in-out
+        ${sidebarOpen ? 'w-64' : 'w-20'}
+        ${isMobile ? (isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : ''}
       `}>
-        <div className={`p-4 flex items-center ${sidebarOpen ? 'justify-between' : 'justify-center'} border-b border-gray-800 min-h-[64px]`}>
-          {sidebarOpen && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-gray-900 font-bold text-sm">A</span>
+        {/* Sidebar Header */}
+        <div className="h-20 flex items-center justify-between px-4 border-b border-white/10">
+          {sidebarOpen ? (
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-violet-500 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
               </div>
-              <span className="text-white font-semibold tracking-tight">ADBMX</span>
+              <span className="text-white font-bold text-xl tracking-tight">ADBMX</span>
+            </Link>
+          ) : (
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-violet-500 rounded-xl flex items-center justify-center mx-auto">
+              <span className="text-white font-bold text-lg">A</span>
             </div>
           )}
-          {!sidebarOpen && (
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-gray-900 font-bold text-sm">A</span>
-            </div>
+          {!isMobile && (
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           )}
         </div>
-        
-        <nav className="flex-1 py-4 overflow-y-auto">
-          <div className="px-3 space-y-1">
-            {menuItems.map(item => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => isMobile && setSidebarOpen(false)}
-                  className={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
-                    ${sidebarOpen ? '' : 'lg:justify-center'}
-                    ${isActive 
-                      ? 'bg-gray-800 text-white' 
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
-                    }
-                  `}
-                  title={!sidebarOpen ? item.label : undefined}
-                >
-                  {icons[item.icon]}
-                  {sidebarOpen && (
-                    <span className="font-medium text-sm">{item.label}</span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-        
-        <div className={`p-4 border-t border-gray-800 ${!sidebarOpen ? 'lg:hidden' : ''}`}>
-          <div className={`flex items-center ${sidebarOpen ? 'gap-3' : ''}`}>
-            <div className="w-9 h-9 bg-gray-700 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0">
-              {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user?.nombre || 'Usuario'}</p>
-                <p className="text-xs text-gray-400 truncate capitalize">{user?.rol || 'Usuario'}</p>
-              </div>
-            )}
-            {sidebarOpen && (
-              <button 
-                onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                title="Cerrar sesion"
+
+        {/* Navigation */}
+        <nav className="p-3 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/25' 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }
+                  ${!sidebarOpen ? 'lg:justify-center' : ''}
+                `}
+                title={!sidebarOpen ? item.label : undefined}
               >
-                {icons.logout}
+                <Icon className="w-5 h-5 shrink-0" />
+                {sidebarOpen && (
+                  <span className="font-medium text-sm">{item.label}</span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-white/10">
+          <button
+            onClick={() => sidebarOpen ? setSidebarOpen(false) : setSidebarOpen(true)}
+            className={`
+              flex items-center gap-3 w-full px-4 py-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all
+              ${!sidebarOpen ? 'lg:justify-center' : ''}
+            `}
+          >
+            <Menu className="w-5 h-5" />
+            {sidebarOpen && <span className="font-medium text-sm">Collapse</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className={`
+        transition-all duration-300
+        ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}
+      `}>
+        {/* Top Header */}
+        <header className="h-20 bg-[var(--color-bg-card)] border-b border-[var(--color-border)] flex items-center justify-between px-6 sticky top-0 z-30">
+          {/* Left side */}
+          <div className="flex items-center gap-4">
+            {isMobile && (
+              <button 
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 -ml-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-xl"
+              >
+                <Menu className="w-6 h-6" />
               </button>
             )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        {isMobile && (
-          <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between h-14">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 -ml-2 text-gray-500 hover:text-gray-900"
-            >
-              {icons.menu}
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gray-900 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">A</span>
-              </div>
-              <span className="font-semibold text-gray-900 text-sm">ADBMX</span>
+            
+            {/* Search */}
+            <div className="hidden md:flex items-center gap-2 bg-[var(--color-bg-secondary)] px-4 py-2.5 rounded-xl border border-[var(--color-border)] w-80">
+              <Search className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <input 
+                type="text" 
+                placeholder="Buscar clientes, oportunidades..." 
+                className="bg-transparent border-none outline-none text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] w-full"
+              />
+              <kbd className="hidden lg:inline-flex items-center px-2 py-0.5 text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-card)] rounded border border-[var(--color-border)]">
+                ⌘K
+              </kbd>
             </div>
-            <div className="w-8" />
-          </header>
-        )}
+          </div>
 
-        <main className="flex-1 overflow-auto">
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            {/* Dark mode toggle */}
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-xl transition-colors"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            {/* Notifications */}
+            <div className="relative notifications-menu">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNotificationsOpen(!notificationsOpen);
+                }}
+                className="relative p-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-xl transition-colors"
+              >
+                <Bell className="w-5 h-5" />
+                {notificaciones.some(n => !n.leida) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+                    <h3 className="font-semibold text-[var(--color-text-primary)]">Notificaciones</h3>
+                    <button 
+                      onClick={() => setNotificaciones(notificaciones.map(n => ({ ...n, leida: true })))}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Marcar todo leído
+                    </button>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notificaciones.length === 0 ? (
+                      <div className="p-4 text-center text-[var(--color-text-muted)]">
+                        No hay notificaciones
+                      </div>
+                    ) : (
+                      notificaciones.map((notif) => (
+                        <div 
+                          key={notif.id}
+                          className={`px-4 py-3 border-b border-[var(--color-border-light)] hover:bg-[var(--color-bg-secondary)] transition-colors cursor-pointer ${!notif.leida ? 'bg-blue-50 dark:bg-blue-900/10' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              notif.tipo === 'tarea' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+                              notif.tipo === 'oportunidad' ? 'bg-violet-100 dark:bg-violet-900/30 text-violet-600' :
+                              'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600'
+                            }`}>
+                              {notif.tipo === 'tarea' ? <Clock className="w-4 h-4" /> :
+                               notif.tipo === 'oportunidad' ? <Briefcase className="w-4 h-4" /> :
+                               <Users className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-[var(--color-text-primary)]">{notif.titulo}</p>
+                              <p className="text-xs text-[var(--color-text-muted)] truncate">{notif.descripcion}</p>
+                              <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                                {notif.tiempo.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            {!notif.leida && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-2"></div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="px-4 py-3 border-t border-[var(--color-border)]">
+                    <button className="w-full text-center text-sm text-blue-600 hover:underline">
+                      Ver todas las notificaciones
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* User Menu */}
+            <div className="relative user-menu">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserMenuOpen(!userMenuOpen);
+                }}
+                className="flex items-center gap-3 p-1.5 pr-4 rounded-xl hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-violet-500 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                  {getInitials(user?.nombre)}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">{user?.nombre || 'Usuario'}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] capitalize">{user?.rol || 'Usuario'}</p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)] hidden md:block" />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl py-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-xl z-50">
+                  <div className="px-4 py-3 border-b border-[var(--color-border)]">
+                    <p className="font-semibold text-[var(--color-text-primary)]">{user?.nombre}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{user?.email}</p>
+                  </div>
+                  <Link 
+                    to="/configuracion"
+                    className="flex items-center gap-3 px-4 py-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="text-sm">Configuración</span>
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Cerrar sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-6">
           {children}
         </main>
       </div>
