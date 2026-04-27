@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import Modal from './ui/Modal';
+import ConfirmDialog from './ui/ConfirmDialog';
 import EmptyState from './ui/EmptyState';
 import { TableSkeleton } from './ui/Skeleton';
 import { useToast } from './ui/Toast';
@@ -16,6 +17,7 @@ const Oportunidades = () => {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirmData, setConfirmData] = useState(null);
   const toast = useToast();
 
   const [formData, setFormData] = useState({
@@ -78,9 +80,7 @@ const Oportunidades = () => {
   };
 
   const confirmarEliminar = (id, titulo) => {
-    if (window.confirm(`¿Estás seguro de eliminar la oportunidad "${titulo}"?`)) {
-      eliminar(id);
-    }
+    setConfirmData({ id, titulo });
   };
 
   const moverEtapa = async (id, etapa) => {
@@ -117,14 +117,35 @@ const Oportunidades = () => {
       </div>
 
       {/* Etapas */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {etapas.map(e => (
-          <div key={e.id} className="group relative rounded-2xl p-4 bg-[var(--color-bg-card)] border border-[var(--color-border)] hover:border-blue-500/50 transition-all cursor-pointer">
-            <p className="text-3xl font-bold text-[var(--color-text-primary)]">{oportunidades.filter(o => o.etapa === e.id).length}</p>
-            <p className="text-sm font-medium text-[var(--color-text-muted)] mt-1">{e.nombre}</p>
-            <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity ${e.color.replace('text-', 'bg-').split(' ')[0]}/10`}></div>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {etapas.map(e => {
+          const count = oportunidades.filter(o => o.etapa === e.id).length;
+          const valor = oportunidades.filter(o => o.etapa === e.id).reduce((s, o) => s + (parseFloat(o.valor) || 0), 0);
+          return (
+            <div key={e.id} className="flex-1">
+              <div 
+                className={`relative rounded-2xl p-5 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${filtroEtapa === e.id ? 'ring-2 ring-blue-500 shadow-lg' : ''}`}
+                style={{ 
+                  backgroundColor: e.color.includes('blue') ? '#dbeafe' : e.color.includes('emerald') ? '#d1fae5' : e.color.includes('amber') ? '#fef3c7' : e.color.includes('violet') ? '#ede9fe' : e.color.includes('red') ? '#fee2e2' : 'var(--color-bg-card)',
+                  border: '1px solid var(--color-border)'
+                }}
+                onClick={() => setFiltroEtapa(e.id === filtroEtapa ? 'todas' : e.id)}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${e.color.split(' ')[0].replace('bg-', 'bg-opacity-80 ')}`}>
+                  {e.id === 'ganado' && <span className="text-2xl text-emerald-700">✓</span>}
+                  {e.id === 'perdido' && <span className="text-2xl text-red-700">✗</span>}
+                  {e.id === 'nuevo' && <span className="text-2xl text-blue-700">✦</span>}
+                  {e.id === 'calificado' && <span className="text-2xl text-emerald-700">◎</span>}
+                  {e.id === 'propuesta' && <span className="text-2xl text-amber-700">◈</span>}
+                  {e.id === 'negociacion' && <span className="text-2xl text-violet-700">◆</span>}
+                </div>
+                <p className="text-3xl font-bold" style={{ color: e.color.includes('blue') ? '#1e40af' : e.color.includes('emerald') ? '#065f46' : e.color.includes('amber') ? '#92400e' : e.color.includes('violet') ? '#5b21b6' : e.color.includes('red') ? '#991b1b' : 'var(--color-text-primary)' }}>{count}</p>
+                <p className="text-sm font-medium" style={{ color: e.color.includes('blue') ? '#1e40af' : e.color.includes('emerald') ? '#065f46' : e.color.includes('amber') ? '#92400e' : e.color.includes('violet') ? '#5b21b6' : e.color.includes('red') ? '#991b1b' : 'var(--color-text-muted)' }}>{e.nombre}</p>
+                <p className="text-sm font-semibold" style={{ color: e.color.includes('blue') ? '#1e40af' : e.color.includes('emerald') ? '#065f46' : e.color.includes('amber') ? '#92400e' : e.color.includes('violet') ? '#5b21b6' : e.color.includes('red') ? '#991b1b' : 'var(--color-text-primary)' }}>${valor.toLocaleString()}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Filter */}
@@ -181,13 +202,19 @@ const Oportunidades = () => {
                         <p className="font-bold text-[var(--color-text-primary)]">${parseFloat(o.valor)?.toLocaleString() || '0'}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <select
-                          value={o.etapa}
-                          onChange={(e) => moverEtapa(o.id, e.target.value)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer ${etapa?.color}`}
-                        >
-                          {etapas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-                        </select>
+                        <div className="relative group">
+                          <select
+                            value={o.etapa}
+                            onChange={(e) => moverEtapa(o.id, e.target.value)}
+                            className="appearance-none px-4 py-2 pr-8 rounded-xl text-sm font-semibold cursor-pointer transition-all border-0"
+                            style={{ 
+                              backgroundColor: o.etapa === 'nuevo' ? '#dbeafe' : o.etapa === 'calificado' ? '#d1fae5' : o.etapa === 'propuesta' ? '#fef3c7' : o.etapa === 'negociacion' ? '#ede9fe' : o.etapa === 'ganado' ? '#d1fae5' : o.etapa === 'perdido' ? '#fee2e2' : 'var(--color-bg-secondary)',
+                              color: o.etapa === 'nuevo' ? '#1e40af' : o.etapa === 'calificado' ? '#065f46' : o.etapa === 'propuesta' ? '#92400e' : o.etapa === 'negociacion' ? '#5b21b6' : o.etapa === 'ganado' ? '#065f46' : o.etapa === 'perdido' ? '#991b1b' : 'var(--color-text-primary)'
+                            }}
+                          >
+                            {etapas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+                          </select>
+                        </div>
                       </td>
                       <td className="px-6 py-4 hidden md:table-cell">
                         <div className="flex items-center gap-2">
@@ -270,6 +297,15 @@ const Oportunidades = () => {
           </div>
         </form>
       </Modal>
+      <ConfirmDialog 
+        isOpen={!!confirmData}
+        onClose={() => setConfirmData(null)}
+        onConfirm={() => confirmData && eliminar(confirmData.id)}
+        title="Eliminar oportunidad"
+        message={`¿Estás seguro de eliminar la oportunidad "${confirmData?.titulo}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };

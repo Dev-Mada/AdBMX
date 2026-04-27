@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import Modal from './ui/Modal';
+import ConfirmDialog from './ui/ConfirmDialog';
 import EmptyState from './ui/EmptyState';
 import { TableSkeleton } from './ui/Skeleton';
 import { useToast } from './ui/Toast';
@@ -13,6 +14,7 @@ const Tareas = () => {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [editando, setEditando] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirmData, setConfirmData] = useState(null);
   const toast = useToast();
 
   const [formData, setFormData] = useState({
@@ -86,9 +88,7 @@ const Tareas = () => {
   };
 
   const confirmarEliminar = (id, titulo) => {
-    if (window.confirm(`¿Estás seguro de eliminar la tarea "${titulo}"?`)) {
-      eliminar(id);
-    }
+    setConfirmData({ id, titulo });
   };
 
   const cambiarEstado = async (id, estado) => {
@@ -246,6 +246,15 @@ const Tareas = () => {
           </table>
         </div>
       )}
+      <ConfirmDialog 
+        isOpen={!!confirmData}
+        onClose={() => setConfirmData(null)}
+        onConfirm={() => confirmData && eliminar(confirmData.id)}
+        title="Eliminar tarea"
+        message={`¿Estás seguro de eliminar la tarea "${confirmData?.titulo}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };

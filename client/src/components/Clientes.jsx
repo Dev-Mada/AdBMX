@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import Modal from './ui/Modal';
+import ConfirmDialog from './ui/ConfirmDialog';
 import EmptyState from './ui/EmptyState';
 import { TableSkeleton } from './ui/Skeleton';
 import { useToast } from './ui/Toast';
 import { 
   Search, Plus, Filter, MoreVertical, Mail, Phone, 
   Building, MapPin, Edit2, Trash2, ChevronDown,
-  Users, X, Check
+  Users, X, Check, Eye
 } from 'lucide-react';
 
 const Clientes = () => {
@@ -15,8 +16,11 @@ const Clientes = () => {
   const [filtro, setFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('todos');
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [mostrarVerCliente, setMostrarVerCliente] = useState(false);
   const [clienteEditando, setClienteEditando] = useState(null);
+  const [clienteViendo, setClienteViendo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirmData, setConfirmData] = useState(null);
   const toast = useToast();
 
   const [formData, setFormData] = useState({
@@ -80,9 +84,12 @@ const Clientes = () => {
   };
 
   const confirmarEliminar = (id, nombre) => {
-    if (window.confirm(`¿Estás seguro de eliminar el cliente "${nombre}"?`)) {
-      eliminarCliente(id);
-    }
+    setConfirmData({ id, nombre, tipo: 'cliente' });
+  };
+
+  const verCliente = (cliente) => {
+    setClienteViendo(cliente);
+    setMostrarVerCliente(true);
   };
 
   const limpiarForm = () => {
@@ -219,6 +226,13 @@ const Clientes = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => verCliente(c)} 
+                          className="p-2 text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          title="Ver cliente"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <button 
                           onClick={() => editarCliente(c)} 
                           className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
@@ -371,6 +385,77 @@ const Clientes = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Modal Ver Cliente */}
+      <Modal isOpen={mostrarVerCliente} onClose={() => setMostrarVerCliente(false)} title="Detalles del cliente" size="lg">
+        {clienteViendo && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 pb-4 border-b border-[var(--color-border)]">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-500 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                {clienteViendo.nombre?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{clienteViendo.nombre}</h3>
+                <p className="text-[var(--color-text-muted)]">{clienteViendo.empresa || 'Sin empresa'}</p>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold mt-1 ${getEstadoBadge(clienteViendo.estado)}`}>
+                  {getEstadoTexto(clienteViendo.estado)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Email</p>
+                <p className="text-[var(--color-text-primary)]">{clienteViendo.email}</p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Teléfono</p>
+                <p className="text-[var(--color-text-primary)]">{clienteViendo.telefono || '-'}</p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Industria</p>
+                <p className="text-[var(--color-text-primary)]">{clienteViendo.industria || '-'}</p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Valor potencial</p>
+                <p className="text-[var(--color-text-primary)] font-semibold">
+                  {clienteViendo.valorPotencial ? `$${parseFloat(clienteViendo.valorPotencial).toLocaleString()}` : '-'}
+                </p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl md:col-span-2">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Dirección</p>
+                <p className="text-[var(--color-text-primary)]">{clienteViendo.direccion || '-'}</p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Fuente</p>
+                <p className="text-[var(--color-text-primary)] capitalize">{clienteViendo.fuente || '-'}</p>
+              </div>
+              <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">Notas</p>
+                <p className="text-[var(--color-text-primary)]">{clienteViendo.notas || '-'}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-[var(--color-border)]">
+              <button 
+                onClick={() => setMostrarVerCliente(false)}
+                className="px-6 py-3 bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-xl font-semibold hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      <ConfirmDialog 
+        isOpen={!!confirmData}
+        onClose={() => setConfirmData(null)}
+        onConfirm={() => confirmData && eliminarCliente(confirmData.id)}
+        title="Eliminar cliente"
+        message={`¿Estás seguro de eliminar el cliente "${confirmData?.nombre}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
     </div>
   );
 };
